@@ -36,6 +36,13 @@
                   </option>
                 </select>
               </f7-list-item>
+              <f7-list-item smart-select title="Maturity" :smart-select-params="{ closeOnSelect: true, openIn: 'sheet' }">
+                <select @change="updateFilter('maturityLevel', $event.target.value)">
+                  <option v-for="type in Object.keys(AddonMaturityLevels)" :key="type" :value="type" :selected="type===maturityLevel">
+                    {{ AddonMaturityLevels[type].label }}
+                  </option>
+                </select>
+              </f7-list-item>
             </f7-list>
           </f7-accordion-content>
         </f7-list-item>
@@ -248,7 +255,7 @@
 <script>
 import AddonStoreMixin from './addon-store-mixin'
 import AddonsSection from '@/components/addons/addons-section.vue'
-import { AddonIcons, AddonTitles, AddonSuggestionLabels, AddonConnectionTypes, AddonRegionTypes } from '@/assets/addon-store'
+import { AddonIcons, AddonTitles, AddonSuggestionLabels, AddonConnectionTypes, AddonRegionTypes, AddonMaturityLevels } from '@/assets/addon-store'
 
 export default {
   mixins: [AddonStoreMixin],
@@ -266,6 +273,7 @@ export default {
       searchResults: null,
       connectionType: 'cloud',
       regionType: 'exclude_other',
+      maturityLevel: 'all',
       region: null,
       regionReady: false
     }
@@ -298,6 +306,9 @@ export default {
     },
     connectionTypes () {
       return this.AddonConnectionTypes[this.connectionType].values
+    },
+    maturityLevels () {
+      return this.AddonMaturityLevels[this.maturityLevel].values
     }
   },
   methods: {
@@ -404,6 +415,7 @@ export default {
       // Note only the addons from the distribution currently have the connection attribute.
       // Therefore marketplace or alternative store addons will only be visible with a selection that allows cloud connections.
       const isInConnectionFilter = isLibraryContentType ? true : (this.connectionTypes.includes(addon.connection) || this.connectionTypes.includes('cloud'))
+      const isInMaturityFilter = this.maturityLevels.includes('all') || this.maturityLevels.includes(addon.maturity)
       // Filter according to region/country. Don't filter if no region/country set for OH.
       // Note only the addons from the distribution currently have the countries attribute.
       let isInRegionFilter = true
@@ -414,7 +426,7 @@ export default {
           isInRegionFilter = addon.countries.map(c => c.toUpperCase()).includes(this.region.toUpperCase())
         }
       }
-      return isInConnectionFilter && isInRegionFilter
+      return isInConnectionFilter && isInRegionFilter && isInMaturityFilter
     }
   },
   created () {
@@ -423,6 +435,7 @@ export default {
     this.SuggestionLabels = AddonSuggestionLabels
     this.AddonConnectionTypes = AddonConnectionTypes
     this.AddonRegionTypes = AddonRegionTypes
+    this.AddonMaturityLevels = AddonMaturityLevels
   }
 }
 </script>
