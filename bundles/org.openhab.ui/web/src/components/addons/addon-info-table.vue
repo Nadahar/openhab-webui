@@ -72,6 +72,14 @@ export default {
         })
       }
 
+      if (this.addon.maturity) {
+        info.push({
+          id: 'maturity',
+          title: 'Maturity',
+          value: this.addon.maturity
+        })
+      }
+
       info.push({
         id: 'type',
         title: 'Type',
@@ -140,6 +148,22 @@ export default {
           afterIcon: 'chat_bubble_2_fill',
           linkUrl: this.addon.link
         })
+        if (this.addon.documentationLink) {
+          info.push({
+            id: 'documentationLink',
+            title: 'Documentation',
+            afterIcon: 'question_circle_fill',
+            linkUrl: this.addon.documentationLink
+          })
+        }
+        if (this.addon.issuesLink) {
+          info.push({
+            id: 'issuesLink',
+            title: 'Issues',
+            afterIcon: 'exclamationmark_bubble_fill',
+            linkUrl: this.addon.issuesLink
+          })
+        }
       } else if (source === 'eclipse' || source === 'karaf') {
         info.push({
           id: 'documentationLink',

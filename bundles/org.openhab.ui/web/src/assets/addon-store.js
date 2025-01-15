@@ -66,6 +66,25 @@ export const AddonRegionTypes = {
   all: 'All'
 }
 
+export const AddonMaturityLevels = {
+  all: {
+    label: 'Show all',
+    values: ['all', 'alpha', 'beta', 'stable', 'mature']
+  },
+  beta: {
+    label: 'Beta, stable and mature',
+    values: ['beta', 'stable', 'mature']
+  },
+  stable: {
+    label: 'Stable and mature',
+    values: ['stable', 'mature']
+  },
+  mature: {
+    label: 'Mature only',
+    values: ['mature']
+  }
+}
+
 export const ContentTypes = {
   'application/java-archive': 'Java Archive',
   'application/vnd.openhab.bundle': 'OSGi Bundle',
