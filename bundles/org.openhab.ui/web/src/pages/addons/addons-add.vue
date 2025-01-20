@@ -108,8 +108,15 @@ export default {
             this.$f7.emit('addonChange', null)
             break
           case 'failed':
+            let failedText
+            const exists = /same UID \(([^)]*test_widget)\) already exists/.exec(event.payload)
+            if (exists) {
+              failedText = `Can't add ${topicParts[2]} since a widget with the same UID already exists: ${exists[1]}`
+            } else {
+              failedText = `Installation of add-on ${topicParts[2]} failed`
+            }
             this.$f7.toast.create({
-              text: `Installation of add-on ${topicParts[2]} failed`,
+              text: failedText,
               closeButton: true,
               destroyOnClose: true
             }).open()
