@@ -92,7 +92,8 @@ export const ContentTypes = {
   'application/vnd.openhab.feature;type=karfile': 'Karaf KAR Archive',
   'application/vnd.openhab.ruletemplate': 'Rule Template',
   'application/vnd.openhab.uicomponent;type=widget': 'UI Widget',
-  'application/vnd.openhab.uicomponent;type=blocks': 'Block Library'
+  'application/vnd.openhab.uicomponent;type=blocks': 'Block Library',
+  'application/vnd.openhab.transformation': 'Transformation'
 }
 
 export const Formats = {
