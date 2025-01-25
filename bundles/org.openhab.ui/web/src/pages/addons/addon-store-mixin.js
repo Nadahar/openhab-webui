@@ -65,7 +65,7 @@ export default {
             break
           case 'failed':
             let failedText
-            const exists = /same UID \(([^)]*test_widget)\) already exists/.exec(event.payload)
+            const exists = /same UID \(([^)]*)\) already exists/.exec(event.payload)
             if (exists) {
               failedText = `Can't add ${topicParts[2]} since a widget with the same UID already exists: ${exists[1]}`
             } else {
