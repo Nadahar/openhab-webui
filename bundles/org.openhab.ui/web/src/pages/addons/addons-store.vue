@@ -205,9 +205,15 @@
         <addons-section
           v-if="addons && officialAddons"
           @addonButtonClick="addonButtonClick"
-          :addons="unsuggestedAddons.filter((a) => a.type === 'transformation')" :show-all="true"
+          :addons="unsuggestedAddons.filter((a) => a.type === 'transformation' && a.contentType !== 'application/vnd.openhab.transformation')"
           :featured="['transformation-jsonpath', 'transformation-map', 'transformation-regex']"
           :title="'Transformation Add-ons'"
+          :subtitle="'Translate raw values into processed or human-readable representations'" />
+        <addons-section
+          v-if="addons && officialAddons"
+          @addonButtonClick="addonButtonClick"
+          :addons="unsuggestedAddons.filter((a) => a.type === 'transformation' && a.contentType === 'application/vnd.openhab.transformation')"
+          :title="'Transformation Configurations'"
           :subtitle="'Translate raw values into processed or human-readable representations'" />
       </f7-tab>
 
