@@ -154,13 +154,28 @@ export default {
       self.$refs.sheet.f7Sheet.stepToggle('.demo-sheet-swipe-to-step')
     },
     install () {
+      const self = this
       this.$oh.api.post('/rest/addons/' + this.addonId + '/install' + (this.serviceId ? '?serviceId=' + this.serviceId : ''), {}, 'text').then((data) => {
         this.$emit('install', this.addon)
+      }).catch((err) => {
+        self.$refs.sheet.f7Sheet.close()
+        this.$f7.toast.create({
+          text: err === '466' ? `Failed to install '${this.addon.label}' because a dependency is missing` : `Failed to install '${this.addon.label}': ` + err,
+          destroyOnClose: true,
+          closeButton: true
+        }).open()
       })
     },
     uninstall () {
       this.$oh.api.post('/rest/addons/' + this.addonId + '/uninstall' + (this.serviceId ? '?serviceId=' + this.serviceId : ''), {}, 'text').then((data) => {
         this.$emit('uninstall', this.addon)
+      }).catch((err) => {
+        self.$refs.sheet.f7Sheet.close()
+        this.$f7.toast.create({
+          text: `Failed to uninstall '${this.addon.label}': ` + err,
+          destroyOnClose: true,
+          closeButton: true
+        }).open()
       })
     }
   }
