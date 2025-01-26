@@ -26,8 +26,11 @@
               <div class="addon-header-actions">
                 <div v-if="showInstallActions">
                   <f7-preloader v-if="isPending(addon)" color="blue" />
-                  <f7-button v-else-if="addon.installed" class="install-button" text="Remove" color="red" round small fill @click="openAddonPopup" />
-                  <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" color="blue" round small fill @click="openAddonPopup" />
+                  <f7-segmented v-else round :bgColor="addon.installed ? 'red' : 'blue'">
+                    <f7-button v-if="addon.installed" class="install-button" text="Remove" small @click="openAddonPopup" />
+                    <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" small @click="openAddonPopup" />
+                    <f7-button class="install-menu-button" icon-f7="chevron_down" small />
+                  </f7-segmented>
                 </div>
                 <f7-link v-if="showConfig" icon-f7="gears" tooltip="Configure add-on" color="blue" :href="'/settings/addons/' + addonId" round small />
               </div>
@@ -150,10 +153,20 @@
       margin-bottom auto
       margin-right 15px
       .install-button
+        --f7-button-text-color var(--f7-page-bg-color)
         --f7-button-text-transform uppercase
         padding-left 15px
-        padding-right 15px
+        padding-right 10px
         font-size 16px
+        text-overflow: clip
+      .install-menu-button
+        --f7-button-text-color var(--f7-page-bg-color)
+        padding-left 7px
+        padding-right 16px
+        text-overflow: clip
+        border-left-width: thin
+        border-left-color: var(--f7-page-bg-color)
+        width 40px
   .addon-description
     --f7-block-strong-bg-color transparent
     width calc(100%)
