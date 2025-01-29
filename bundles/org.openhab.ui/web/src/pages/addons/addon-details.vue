@@ -71,7 +71,7 @@
           <f7-block-title class="margin-left margin-bottom-half" medium>
             Information
           </f7-block-title>
-          <addon-info-table v-if="ready && addon" :addon="addon" />
+          <addon-info-table v-if="ready && addon" :addon="addon" :dependencies="dependencies" />
         </f7-col>
       </f7-row>
     </f7-block>
@@ -208,6 +208,7 @@ export default {
   data () {
     return {
       addon: null,
+      dependencies: [],
       ready: false,
       descriptionReady: false,
       parsedDescription: '',
@@ -266,13 +267,52 @@ export default {
       this.$oh.api.get('/rest/addons/' + this.addonId + (serviceId ? '?serviceId=' + serviceId : '')).then((data) => {
         this.resetPending()
         this.$set(this, 'addon', data)
-        this.ready = true
-        this.processDescription()
-        this.startEventSource()
+        this.dependencies = []
 
-        setTimeout(() => {
-          this.$f7.lazy.create('.page-addon-details')
-        })
+        if (data.dependsOn && data.dependsOn.length > 0) {
+          let promises = []
+          data.dependsOn.forEach((depId) => {
+            const fetchDep = this.$oh.api.get('/rest/addons/' + depId + '?serviceId=all')
+            fetchDep.then((dep) => {
+              return dep
+            }).catch(() => {
+              this.dependencies.push({
+                name: depId,
+                missing: true,
+                unknown: true
+              })
+            })
+            promises.push(fetchDep)
+          })
+          Promise.allSettled(promises).then((result) => {
+            result.forEach((r) => {
+              if (r.status === 'fulfilled') {
+                let depEntry = {}
+                depEntry.name = r.value.label
+                if (r.value.type && r.value.uid) {
+                  depEntry.link = '/addons/' + r.value.type + '/' + r.value.uid
+                }
+                depEntry.missing = !r.value.installed
+                this.dependencies.push(depEntry)
+              }
+            })
+            this.ready = true
+            this.processDescription()
+            this.startEventSource()
+
+            setTimeout(() => {
+              this.$f7.lazy.create('.page-addon-details')
+            })
+          })
+        } else {
+          this.ready = true
+          this.processDescription()
+          this.startEventSource()
+
+          setTimeout(() => {
+            this.$f7.lazy.create('.page-addon-details')
+          })
+        }
       })
     },
     processDescription () {
