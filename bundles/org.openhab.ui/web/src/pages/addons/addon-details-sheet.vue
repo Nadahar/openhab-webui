@@ -4,7 +4,11 @@
       <div v-if="!noDetails" class="swipe-handler" @click="toggleSwipeStep" />
       <f7-block-title><strong><big>{{ addon.label }}</big></strong></f7-block-title>
       <f7-block v-if="state === 'UNINSTALLED'">
-        <div v-if="addon.verifiedAuthor" class="text-color-green display-flex align-items-center">
+        <h3 v-if="missingDependencies" class="text-color-red display-flex align-items-center">
+          <f7-icon f7="lock_shield" class="margin-right" />
+          Missing dependency
+        </h3>
+        <div v-else-if="addon.verifiedAuthor" class="text-color-green display-flex align-items-center">
           <f7-icon f7="checkmark_shield" class="margin-right" />
           Verified Author
         </div>
@@ -16,21 +20,33 @@
           <f7-icon f7="exclamationmark_shield" class="margin-right" />
           Unverified Author
         </div>
-        <f7-block-footer v-if="showUnpublishedWarning" class="display-flex align-items-center text-color-red">
+        <f7-block-footer v-if="missingDependencies && aMissingDependency.link" class="display-flex align-items-center">
+          <span><strong>{{ this.aMissingDependency.name }}</strong>&#32;must be installed before this add-on can be {{ installableAddon ? 'installed' : 'added' }}.</span>
+        </f7-block-footer>
+        <f7-block-footer v-else-if="missingDependencies" class="display-flex align-items-center">
+          <span>"<strong>{{ this.aMissingDependency.name }}</strong>" must be installed manually before this add-on can be {{ installableAddon ? 'installed' : 'added' }}.</span>
+        </f7-block-footer>
+        <f7-block-footer v-if="!missingDependencies && showUnpublishedWarning" class="display-flex align-items-center text-color-red">
           This add-on has not been published to the Marketplace. DO NOT install this add-on, unless for debugging purposes if you are the author or a marketplace curator!<br><br>
           Please make sure "Show Unpublished Entries" is not inadvertently turned on in Settings > Community Marketplace.
         </f7-block-footer>
-        <f7-block-footer v-if="showUnverifiedAuthorWarning" class="display-flex align-items-center">
+        <f7-block-footer v-if="!missingDependencies && showUnverifiedAuthorWarning" class="display-flex align-items-center">
           <small>Adding this type of add-on from unknown providers can harm your system because its code might not have been properly reviewed. Make sure you trust the source and understand the risks before installing this add-on.</small>
         </f7-block-footer>
       </f7-block>
       <f7-block>
         <f7-row>
           <f7-col class="col-100 margin-top padding-horizontal">
-            <f7-button large fill color="blue" v-if="state === 'UNINSTALLED'" @click="install()">
+            <f7-button v-if="missingDependencies && aMissingDependency.link && state === 'UNINSTALLED'" large fill color="orange" @click="gotoDependency()">
+              Go to {{ aMissingDependency.name }}
+            </f7-button>
+            <f7-button v-else-if="missingDependencies && state === 'UNINSTALLED'" large fill color="gray" @click="close()">
+              Close
+            </f7-button>
+            <f7-button v-else-if="state === 'UNINSTALLED'" large fill color="blue" @click="install()">
               {{ installableAddon ? 'Install' : 'Add' }}
             </f7-button>
-            <f7-button large fill color="red" v-if="state !== 'UNINSTALLED'" @click="uninstall()">
+            <f7-button v-else large fill color="red" @click="uninstall()">
               {{ installableAddon ? 'Uninstall' : 'Remove' }}
             </f7-button>
           </f7-col>
@@ -43,7 +59,7 @@
       </f7-block>
     </div>
     <f7-page-content v-if="!noDetails" style="margin-top: var(--f7-safe-area-top)">
-      <addon-info-table :addon="addon" class="no-margin-top" />
+      <addon-info-table :addon="addon" :dependencies="dependencies" class="no-margin-top" />
     </f7-page-content>
   </f7-sheet>
 </template>
@@ -105,6 +121,9 @@ export default {
   data () {
     return {
       addon: {},
+      dependencies: [],
+      missingDependencies: 0,
+      aMissingDependency: {},
       bindingInfo: {}
     }
   },
@@ -114,18 +133,71 @@ export default {
       if (state) {
         if (!this.addonId) {
           this.addon = {}
+          this.dependencies = []
+          this.missingDependencies = 0
+          this.aMissingDependency = {}
           this.bindingInfo = {}
           return
         }
         self.$f7.preloader.show()
         this.$oh.api.get('/rest/addons/' + this.addonId + (this.serviceId ? '?serviceId=' + this.serviceId : '')).then(data => {
           this.addon = data
+          this.dependencies = []
+          this.missingDependencies = 0
+          this.aMissingDependency = {}
 
-          self.$f7.preloader.hide()
-          setTimeout(() => {
-            if (!this.noDetails) self.$refs.sheet.f7Sheet.setSwipeStep()
-            self.$refs.sheet.f7Sheet.open()
-          })
+          if (data.dependsOn && data.dependsOn.length > 0) {
+            let promises = []
+            data.dependsOn.forEach((depId) => {
+              const fetchDep = this.$oh.api.get('/rest/addons/' + depId + '?serviceId=all')
+              fetchDep.then((dep) => {
+                return dep
+              }).catch(() => {
+                this.missingDependencies++
+                this.dependencies.push({
+                  name: depId,
+                  missing: true,
+                  unknown: true
+                })
+              })
+              promises.push(fetchDep)
+            })
+            Promise.allSettled(promises).then((result) => {
+              result.forEach((r) => {
+                if (r.status === 'fulfilled') {
+                  let depEntry = {}
+                  depEntry.name = r.value.label
+                  if (r.value.type && r.value.uid) {
+                    depEntry.link = '/addons/' + r.value.type + '/' + r.value.uid
+                  }
+                  depEntry.missing = !r.value.installed
+                  if (depEntry.missing) {
+                    this.missingDependencies++
+                  }
+                  this.dependencies.push(depEntry)
+                }
+              })
+              if (this.missingDependencies) {
+                this.aMissingDependency = this.dependencies.find((d) => d.missing && !d.unknown)
+                if (!this.aMissingDependency) {
+                  this.aMissingDependency = this.dependencies.find((d) => d.missing)
+                }
+              } else {
+                this.aMissingDependency = {}
+              }
+              self.$f7.preloader.hide()
+              setTimeout(() => {
+                if (!this.noDetails) self.$refs.sheet.f7Sheet.setSwipeStep()
+                self.$refs.sheet.f7Sheet.open()
+              })
+            })
+          } else {
+            self.$f7.preloader.hide()
+            setTimeout(() => {
+              if (!this.noDetails) self.$refs.sheet.f7Sheet.setSwipeStep()
+              self.$refs.sheet.f7Sheet.open()
+            })
+          }
         })
       } else {
         self.$refs.sheet.f7Sheet.close()
@@ -145,7 +217,7 @@ export default {
       return (this.addon && !this.addon.verifiedAuthor && this.installableAddon)
     },
     showUnpublishedWarning () {
-      return (this.serviceId === 'marketplace' && this.addon.properties && this.addon.properties.tags && this.addon.properties.tags.indexOf('published') < 0)
+      return (!this.missingDependencies && this.serviceId === 'marketplace' && this.addon.properties && this.addon.properties.tags && this.addon.properties.tags.indexOf('published') < 0)
     }
   },
   methods: {
@@ -177,6 +249,13 @@ export default {
           closeButton: true
         }).open()
       })
+    },
+    gotoDependency () {
+      this.$refs.sheet.f7Sheet.close()
+      this.$f7router.navigate(this.aMissingDependency.link)
+    },
+    close () {
+      this.$refs.sheet.f7Sheet.close()
     }
   }
 }

@@ -2,7 +2,8 @@
   <f7-list v-if="addon && information && information.length > 0" class="information-table">
     <f7-list-item v-for="line in information" :key="line.id"
                   :title="line.title" :after="line.value"
-                  :link="line.linkUrl" external no-chevron target="_blank">
+                  :link="line.linkUrl" external no-chevron :target="line.dependency ? undefined : '_blank'"
+                  :class="{ 'missing' : line.missing}">
       <f7-icon slot="after" v-if="line.afterIcon" :f7="line.afterIcon" />
     </f7-list-item>
   </f7-list>
@@ -22,6 +23,11 @@
       font-size var(--f7-list-item-subtitle-font-size)
       &:first-child
         font-size x-large
+  .missing
+    color red !important
+    .item-link
+      .item-after
+        --f7-list-item-after-text-color: red !important
   .item-link
     .item-title
       --f7-list-item-title-text-color var(--f7-theme-color) !important
@@ -37,7 +43,7 @@ dayjs.extend(utc)
 import { ContentTypes, Formats } from '@/assets/addon-store'
 
 export default {
-  props: ['addon'],
+  props: ['addon', 'dependencies'],
   computed: {
     information () {
       let info = []
@@ -78,6 +84,25 @@ export default {
           title: 'Maturity',
           value: this.addon.maturity
         })
+      }
+
+      if (this.addon.dependsOn && this.dependencies && this.addon.dependsOn.length > 0) {
+        for (let i = 0; i < this.dependencies.length; i++) {
+          let depItem = {
+            id: 'dependsOn' + (i + 1),
+            title: 'Requires',
+            value: this.dependencies[i].name,
+            dependency: true
+          }
+          if (this.dependencies[i].link) {
+            depItem.linkUrl = this.dependencies[i].link
+          }
+          if (this.dependencies[i].missing) {
+            depItem.missing = true
+            depItem.afterIcon = 'exclamationmark_triangle_fill'
+          }
+          info.push(depItem)
+        }
       }
 
       info.push({
