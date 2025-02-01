@@ -16,6 +16,9 @@
               <div class="addon-header-title">
                 {{ addon.label }}
               </div>
+              <div v-if="addon.versions && Object.keys(addon.versions).length > 1" class="addon-header-version">
+                Version {{ addon.version }}
+              </div>
               <div v-if="addon.verifiedAuthor" class="addon-header-subtitle">
                 {{ addon.author }}
                 <f7-icon :color="$f7.data.themeOptions.dark === 'dark' ? 'white' : 'blue'" f7="checkmark_seal_fill" />
@@ -29,10 +32,11 @@
                   <f7-segmented v-else round :bgColor="addon.installed ? 'red' : 'blue'">
                     <f7-button v-if="addon.installed" class="install-button" text="Remove" small @click="openAddonPopup" />
                     <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" small @click="openAddonPopup" />
-                    <f7-button class="install-menu-button" icon-f7="chevron_down" small />
+                    <f7-button class="install-menu-button" popover-open=".addon-version-select" icon-f7="chevron_down" small />
                   </f7-segmented>
                 </div>
                 <f7-link v-if="showConfig" icon-f7="gears" tooltip="Configure add-on" color="blue" :href="'/settings/addons/' + addonId" round small />
+                <addon-version-select @version-selected="(v) => versionSelected(v)" :addon="addon" />
               </div>
             </div>
           </div>
@@ -134,6 +138,14 @@
         .addon-header-title
           font-size 27px
           line-height normal
+      .addon-header-version
+        font-size 12px
+        font-weight 600
+        line-height 20px
+      @media (min-width 768px)
+        .addon-header-version
+          font-size 14px
+          line-height 22px
       .addon-header-subtitle
         font-size 16px
         font-weight 600
@@ -196,13 +208,15 @@ import AddonStoreMixin from './addon-store-mixin'
 import AddonStatsLine from '@/components/addons/addon-stats-line.vue'
 import AddonInfoTable from '@/components/addons/addon-info-table.vue'
 import AddonLogo from '@/components/addons/addon-logo.vue'
+import AddonVersionSelect from '@/components/addons/addon-version-select.vue'
 
 export default {
   mixins: [AddonStoreMixin],
   components: {
     AddonLogo,
     AddonStatsLine,
-    AddonInfoTable
+    AddonInfoTable,
+    AddonVersionSelect
   },
   props: ['addonId'],
   data () {
@@ -373,6 +387,9 @@ export default {
         this.descriptionReady = true
         setTimeout(() => { this.$f7.lazy.create('.addon-description-text') })
       }
+    },
+    versionSelected (version) {
+      console.log('Selected version is: ' + version.name) // TODO: (Nad) Implement
     }
   }
 }
