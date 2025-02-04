@@ -10,6 +10,7 @@ export default {
       currentAddon: null,
       currentAddonId: null,
       currentServiceId: null,
+      currentVersion: null,
       ready: false,
       initSearchbar: false,
       addonPopupOpened: false,
@@ -21,7 +22,10 @@ export default {
     openAddonPopup (addonId, serviceId, addon) {
       this.currentAddonId = addonId
       this.currentServiceId = serviceId
-      if (addon) this.currentAddon = addon
+      if (addon) {
+        this.currentAddon = addon
+        this.currentVersion = addon.version
+      }
       this.addonPopupOpened = true
     },
     installAddon (addon) {
@@ -52,6 +56,7 @@ export default {
       this.$set(this, 'currentAddon', null)
       this.currentAddonId = null
       this.currentServiceId = null
+      this.currentVersion = null
     },
     startEventSource () {
       this.eventSource = this.$oh.sse.connect('/rest/events?topics=openhab/addons/*/*', null, (event) => {

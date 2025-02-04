@@ -30,8 +30,8 @@
                 <div v-if="showInstallActions">
                   <f7-preloader v-if="isPending(addon)" color="blue" />
                   <f7-segmented v-else round :bgColor="addon.installed ? 'red' : 'blue'">
-                    <f7-button v-if="addon.installed" class="install-button" text="Remove" small @click="openAddonPopup" />
-                    <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" small @click="openAddonPopup" />
+                    <f7-button v-if="addon.installed" class="install-button" text="Remove" small @click="openAddonPopup(addonId, serviceId, addon)" />
+                    <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" small @click="openAddonPopup(addonId, serviceId, addon)" />
                     <f7-button class="install-menu-button" popover-open=".addon-version-select" icon-f7="chevron_down" small />
                   </f7-segmented>
                 </div>
@@ -83,6 +83,7 @@
       v-if="ready"
       :addon-id="realAddonId"
       :service-id="serviceId"
+      :version="version"
       :no-details="true"
       :opened="addonPopupOpened"
       @closed="addonPopupOpened = false"
@@ -222,6 +223,7 @@ export default {
   data () {
     return {
       addon: null,
+      version: null,
       dependencies: [],
       ready: false,
       descriptionReady: false,
@@ -278,7 +280,7 @@ export default {
       if (this.addonId.indexOf(':') > 0) {
         serviceId = this.addonId.substring(0, this.addonId.indexOf(':'))
       }
-      this.$oh.api.get('/rest/addons/' + this.addonId + (serviceId ? '?serviceId=' + serviceId : '')).then((data) => {
+      this.$oh.api.get('/rest/addons/' + this.addonId + (serviceId ? '?serviceId=' + serviceId : '') + (this.version ? (serviceId ? '&' : '?') + 'version=' + encodeURIComponent(this.version) : '')).then((data) => {
         this.resetPending()
         this.$set(this, 'addon', data)
         this.dependencies = []
@@ -389,7 +391,9 @@ export default {
       }
     },
     versionSelected (version) {
-      console.log('Selected version is: ' + version.name) // TODO: (Nad) Implement
+      this.version = version.name
+      this.ready = false
+      this.load()
     }
   }
 }
