@@ -2,7 +2,7 @@
   <f7-sheet ref="sheet" class="demo-sheet-swipe-to-step" @sheet:closed="$emit('closed')" swipe-to-close swipe-to-step backdrop>
     <div class="sheet-modal-swipe-step">
       <div v-if="!noDetails" class="swipe-handler" @click="toggleSwipeStep" />
-      <f7-block-title><strong><big>{{ addon.label }}</big></strong></f7-block-title>
+      <f7-block-title><strong><big>{{ addonTitle }}</big></strong></f7-block-title>
       <f7-block v-if="state === 'UNINSTALLED'">
         <h3 v-if="missingDependencies" class="text-color-red display-flex align-items-center">
           <f7-icon f7="lock_shield" class="margin-right" />
@@ -114,7 +114,7 @@
 import AddonInfoTable from '@/components/addons/addon-info-table.vue'
 
 export default {
-  props: ['addonId', 'serviceId', 'opened', 'noDetails'],
+  props: ['addonId', 'serviceId', 'version', 'opened', 'noDetails'],
   components: {
     AddonInfoTable
   },
@@ -140,7 +140,7 @@ export default {
           return
         }
         self.$f7.preloader.show()
-        this.$oh.api.get('/rest/addons/' + this.addonId + (this.serviceId ? '?serviceId=' + this.serviceId : '')).then(data => {
+        this.$oh.api.get('/rest/addons/' + this.addonId + (this.serviceId ? '?serviceId=' + this.serviceId : '') + (this.version ? (this.serviceId ? '&' : '?') + 'version=' + encodeURIComponent(this.version) : '')).then(data => {
           this.addon = data
           this.dependencies = []
           this.missingDependencies = 0
@@ -210,6 +210,9 @@ export default {
       if (!this.addon) return 'UNKNOWN'
       return this.addon.installed ? 'INSTALLED' : 'UNINSTALLED'
     },
+    addonTitle () {
+      return this.addon.versions && Object.keys(this.addon.versions).length > 1 ? this.addon.label + ' ' + this.addon.version : this.addon.label
+    },
     installableAddon () {
       return (this.addon && this.addon.contentType && (this.addon.contentType === 'application/vnd.openhab.bundle' || this.addon.contentType.indexOf('application/vnd.openhab.feature') === 0))
     },
@@ -227,7 +230,7 @@ export default {
     },
     install () {
       const self = this
-      this.$oh.api.post('/rest/addons/' + this.addonId + '/install' + (this.serviceId ? '?serviceId=' + this.serviceId : ''), {}, 'text').then((data) => {
+      this.$oh.api.post('/rest/addons/' + this.addonId + '/install' + (this.serviceId ? '?serviceId=' + this.serviceId : '') + (this.version ? (this.serviceId ? '&' : '?') + 'version=' + encodeURIComponent(this.version) : ''), {}, 'text').then((data) => {
         this.$emit('install', this.addon)
       }).catch((err) => {
         self.$refs.sheet.f7Sheet.close()

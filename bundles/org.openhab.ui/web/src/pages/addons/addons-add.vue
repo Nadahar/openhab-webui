@@ -49,6 +49,7 @@
       v-if="ready"
       :addon-id="currentAddonId"
       :opened="addonPopupOpened"
+      :version="currentVersion"
       @closed="addonPopupOpened = false"
       @install="installAddon" />
   </f7-page>

@@ -238,6 +238,7 @@
       :addon-id="currentAddonId"
       :service-id="currentServiceId"
       :opened="addonPopupOpened"
+      :version="currentVersion"
       @closed="addonPopupOpened = false"
       @install="installAddon"
       @uninstall="uninstallAddon" />

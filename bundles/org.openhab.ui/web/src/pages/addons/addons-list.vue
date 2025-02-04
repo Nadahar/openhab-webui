@@ -60,6 +60,7 @@
       v-if="ready"
       :addon-id="currentAddonId"
       :opened="addonPopupOpened"
+      :version="currentVersion"
       @closed="addonPopupOpened = false"
       @uninstall="uninstallAddon" />
   </f7-page>
