@@ -1,5 +1,5 @@
 <template>
-  <f7-popover ref="versionPopover" class="addon-version-select" closeByBackdropClick closeByOutsideClick closeOnEscape>
+  <f7-popover ref="versionPopover" class="addon-version-select" @popover:closed="popoverClosed()" closeByBackdropClick closeByOutsideClick closeOnEscape>
     <div class="block-title">
       Select version
     </div>
@@ -46,6 +46,12 @@
 export default {
   props: ['addon'],
   emits: ['versionSelected'],
+  data () {
+    return {
+      selectedVersion: null,
+      pendingVersion: null
+    }
+  },
   computed: {
     versions () {
       if (!this.addon || !this.addon.versions) {
@@ -68,13 +74,17 @@ export default {
         }
         return result
       })
-      if (result.length > 0 && !result.some(v => v.selected)) {
-        let ver = result.find((v) => v.version === this.addon.defaultVersion)
-        if (ver) {
+      if (result.length > 0) {
+        let ver = result.find((v) => v.selected)
+        if (!ver) {
+          ver = result.find((v) => v.version === this.addon.defaultVersion)
+          if (!ver) {
+            ver = result[0]
+          }
           ver.selected = true
-        } else {
-          result[0].selected = true
         }
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        this.selectedVersion = ver
       }
       return result
     }
@@ -97,8 +107,16 @@ export default {
       return version.latest ? 'Latest stable' : (version.compatible ? undefined : 'Incompatible')
     },
     versionSelected (version) {
-      this.$emit('version-selected', version)
-      this.$refs.popover.close()
+      if (version !== this.selectedVersion) {
+        this.pendingVersion = version
+      }
+      this.$refs.versionPopover.close()
+    },
+    popoverClosed () {
+      if (this.pendingVersion && this.pendingVersion !== this.selectedVersion) {
+        this.selectedVersion = this.pendingVersion
+        this.$emit('version-selected', this.selectedVersion)
+      }
     }
   }
 }
