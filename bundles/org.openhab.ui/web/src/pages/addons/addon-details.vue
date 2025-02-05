@@ -29,14 +29,9 @@
               <div class="addon-header-actions">
                 <div v-if="showInstallActions">
                   <f7-preloader v-if="isPending(addon)" color="blue" />
-                  <f7-segmented v-else round :bgColor="addon.installed ? 'red' : 'blue'">
-                    <f7-button v-if="addon.installed" class="install-button" text="Remove" small @click="openAddonPopup(addonId, serviceId, addon)" />
-                    <f7-button v-else class="install-button" :text="installableAddon(addon) ? 'Install' : 'Add'" small @click="openAddonPopup(addonId, serviceId, addon)" />
-                    <f7-button class="install-menu-button" popover-open=".addon-version-select" icon-f7="chevron_down" small />
-                  </f7-segmented>
+                  <addon-install-button v-else @clicked="openAddonPopup(addonId, serviceId, addon)" @version-selected="(v) => versionSelected(v)" :addon="addon" />
                 </div>
                 <f7-link v-if="showConfig" icon-f7="gears" tooltip="Configure add-on" color="blue" :href="'/settings/addons/' + addonId" round small />
-                <addon-version-select @version-selected="(v) => versionSelected(v)" :addon="addon" />
               </div>
             </div>
           </div>
@@ -165,21 +160,6 @@
       margin-top auto
       margin-bottom auto
       margin-right 15px
-      .install-button
-        --f7-button-text-color var(--f7-page-bg-color)
-        --f7-button-text-transform uppercase
-        padding-left 15px
-        padding-right 10px
-        font-size 16px
-        text-overflow: clip
-      .install-menu-button
-        --f7-button-text-color var(--f7-page-bg-color)
-        padding-left 7px
-        padding-right 16px
-        text-overflow: clip
-        border-left-width: thin
-        border-left-color: var(--f7-page-bg-color)
-        width 40px
   .addon-description
     --f7-block-strong-bg-color transparent
     width calc(100%)
@@ -209,7 +189,7 @@ import AddonStoreMixin from './addon-store-mixin'
 import AddonStatsLine from '@/components/addons/addon-stats-line.vue'
 import AddonInfoTable from '@/components/addons/addon-info-table.vue'
 import AddonLogo from '@/components/addons/addon-logo.vue'
-import AddonVersionSelect from '@/components/addons/addon-version-select.vue'
+import AddonInstallButton from '@/components/addons/addon-install-button.vue'
 
 export default {
   mixins: [AddonStoreMixin],
@@ -217,7 +197,7 @@ export default {
     AddonLogo,
     AddonStatsLine,
     AddonInfoTable,
-    AddonVersionSelect
+    AddonInstallButton
   },
   props: ['addonId'],
   data () {
