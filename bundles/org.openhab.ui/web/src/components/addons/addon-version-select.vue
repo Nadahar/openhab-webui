@@ -1,5 +1,5 @@
 <template>
-  <f7-popover ref="popover" class="addon-version-select" closeByBackdropClick closeByOutsideClick closeOnEscape>
+  <f7-popover ref="versionPopover" class="addon-version-select" closeByBackdropClick closeByOutsideClick closeOnEscape>
     <div class="block-title">
       Select version
     </div>
@@ -57,14 +57,25 @@ export default {
           compatible: this.addon.versions[k].compatible,
           stable: this.addon.versions[k].stable
         }
-        if (this.addon.versions[k].version === this.addon.currentVersion) {
+        if (!this.addon.installedVersion && this.addon.versions[k].version === this.addon.version) {
           result.selected = true
+        }
+        if ((this.addon.installedVersion && this.addon.versions[k].version === this.addon.installedVersion)) {
+          result.installed = true
         }
         if (this.addon.versions[k].version === this.addon.defaultVersion) {
           result.latest = true
         }
         return result
       })
+      if (result.length > 0 && !result.some(v => v.selected)) {
+        let ver = result.find((v) => v.version === this.addon.defaultVersion)
+        if (ver) {
+          ver.selected = true
+        } else {
+          result[0].selected = true
+        }
+      }
       return result
     }
   },
