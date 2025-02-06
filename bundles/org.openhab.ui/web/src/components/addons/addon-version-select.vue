@@ -63,11 +63,8 @@ export default {
           compatible: this.addon.versions[k].compatible,
           stable: this.addon.versions[k].stable
         }
-        if (!this.addon.installedVersion && this.addon.versions[k].version === this.addon.version) {
+        if (this.addon.versions[k].version === this.addon.version) {
           result.selected = true
-        }
-        if ((this.addon.installedVersion && this.addon.versions[k].version === this.addon.installedVersion)) {
-          result.installed = true
         }
         if (this.addon.versions[k].version === this.addon.defaultVersion) {
           result.latest = true
@@ -77,9 +74,12 @@ export default {
       if (result.length > 0) {
         let ver = result.find((v) => v.selected)
         if (!ver) {
-          ver = result.find((v) => v.version === this.addon.defaultVersion)
+          ver = result.find((v) => v.version === this.addon.installedVersion)
           if (!ver) {
-            ver = result[0]
+            ver = result.find((v) => v.version === this.addon.defaultVersion)
+            if (!ver) {
+              ver = result[0]
+            }
           }
           ver.selected = true
         }

@@ -44,7 +44,7 @@ export default {
   components: {
     AddonVersionSelect
   },
-  emits: ['clicked', 'install', 'uninstall', 'upgrade', 'downgrade'], // TODO: (Nad) Figure out emits
+  emits: ['clicked', 'install', 'uninstall', 'upgrade', 'downgrade', 'version-selected'], // TODO: (Nad) Figure out emits
   computed: {
     versioned () {
       return this.addon && this.addon.versions && Object.keys(this.addon.versions).length > 1
@@ -52,25 +52,59 @@ export default {
     installable () {
       return (this.addon && (this.addon.contentType === 'application/vnd.openhab.bundle' || this.addon.contentType.indexOf('application/vnd.openhab.feature') === 0))
     },
-    buttonColor () {
+    buttonAction () {
       if (!this.addon) {
-        return 'gray'
+        return 'none'
       }
       if (this.addon.installed) {
-        // TODO: (Nad) Upgrade/downgrade
-        return 'red'
+        if (this.versioned && this.addon.installedVersion && this.addon.installedVersion !== this.addon.version) {
+          let instIdx, verIdx
+          let versions = Object.keys(this.addon.versions)
+          for (let i = 0; i < versions.length; i++) {
+            if (!instIdx && versions[i] === this.addon.installedVersion) {
+              instIdx = i
+            }
+            if (!verIdx && versions[i] === this.addon.version) {
+              verIdx = i
+            }
+          }
+          if (instIdx !== undefined && verIdx !== undefined) {
+            return instIdx < verIdx ? 'downgrade' : 'upgrade'
+          } else {
+            return 'uninstall'
+          }
+        }
+        return 'uninstall'
       }
-      return 'blue'
+      return 'install'
+    },
+    buttonColor () {
+      switch (this.buttonAction) {
+        case 'install':
+          return 'blue'
+        case 'uninstall':
+          return 'red'
+        case 'upgrade':
+          return 'green'
+        case 'downgrade':
+          return 'orange'
+        default:
+          return 'gray'
+      }
     },
     buttonText () {
-      if (!this.addon) {
-        return ''
+      switch (this.buttonAction) {
+        case 'install':
+          return this.installable ? 'Install' : 'Add'
+        case 'uninstall':
+          return 'Remove'
+        case 'upgrade':
+          return 'Upgrade'
+        case 'downgrade':
+          return 'Downgrade'
+        default:
+          return ''
       }
-      if (this.addon.installed) {
-        // TODO: (Nad) Upgrade/downgrade
-        return 'Remove'
-      }
-      return this.installable ? 'Install' : 'Add'
     } // TODO: (Nad) Clean up not needed
   },
   methods: {
