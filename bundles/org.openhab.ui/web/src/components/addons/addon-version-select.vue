@@ -6,7 +6,7 @@
     <div class="list">
       <ul>
         <li v-for="version in versions" :key="version.name">
-          <label class="item-radio item-content" @click="versionSelected(version)">
+          <label class="item-radio item-content" :class="{ 'installed' : version.installed}" @click="versionSelected(version)">
             <input type="radio" name="version-select" :value="version.name" :checked="version.selected">
             <i class="icon icon-radio" />
             <div class="item-inner" :title="versionTooltip(version)">
@@ -25,6 +25,8 @@
   padding: 0px 10px 10px 10px;
   .block-title
     font-weight: 700;
+  .item-content.installed
+    background-color #4442
   .item-title.incompatible:before
     content: 'exclamationmark_triangle_fill'
     font-family: 'Framework7 Icons'
@@ -68,6 +70,9 @@ export default {
         }
         if (this.addon.versions[k].version === this.addon.defaultVersion) {
           result.latest = true
+        }
+        if (this.addon.installedVersion && this.addon.versions[k].version === this.addon.installedVersion) {
+          result.installed = true
         }
         return result
       })
