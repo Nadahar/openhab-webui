@@ -3,7 +3,7 @@
     <div class="sheet-modal-swipe-step">
       <div v-if="!noDetails" class="swipe-handler" @click="toggleSwipeStep" />
       <f7-block-title><strong><big>{{ addonTitle }}</big></strong></f7-block-title>
-      <f7-block v-if="state === 'UNINSTALLED'">
+      <f7-block v-if="state && state !== 'uninstall'">
         <h3 v-if="missingDependencies" class="text-color-red display-flex align-items-center">
           <f7-icon f7="lock_shield" class="margin-right" />
           Missing dependency
@@ -37,17 +37,8 @@
       <f7-block>
         <f7-row>
           <f7-col class="col-100 margin-top padding-horizontal">
-            <f7-button v-if="missingDependencies && aMissingDependency.link && state === 'UNINSTALLED'" large fill color="orange" @click="gotoDependency()">
-              Go to {{ aMissingDependency.name }}
-            </f7-button>
-            <f7-button v-else-if="missingDependencies && state === 'UNINSTALLED'" large fill color="gray" @click="close()">
-              Close
-            </f7-button>
-            <f7-button v-else-if="state === 'UNINSTALLED'" large fill color="blue" @click="install()">
-              {{ installableAddon ? 'Install' : 'Add' }}
-            </f7-button>
-            <f7-button v-else large fill color="red" @click="uninstall()">
-              {{ installableAddon ? 'Uninstall' : 'Remove' }}
+            <f7-button large fill :color="buttonColor" @click="buttonClicked()">
+              {{ buttonText }}
             </f7-button>
           </f7-col>
         </f7-row>
@@ -207,11 +198,73 @@ export default {
   computed: {
     state () {
       // TODO: figure out somehow whether the addon is BEING installed/uninstalled.
-      if (!this.addon) return 'UNKNOWN'
-      return this.addon.installed ? 'INSTALLED' : 'UNINSTALLED'
+      if (!this.addon) {
+        return 'none'
+      }
+      if (this.addon.installed) {
+        if (this.versioned && this.addon.installedVersion && this.addon.installedVersion !== this.addon.version) {
+          let instIdx, verIdx
+          let versions = Object.keys(this.addon.versions)
+          for (let i = 0; i < versions.length; i++) {
+            if (!instIdx && versions[i] === this.addon.installedVersion) {
+              instIdx = i
+            }
+            if (!verIdx && versions[i] === this.addon.version) {
+              verIdx = i
+            }
+          }
+          if (instIdx !== undefined && verIdx !== undefined) {
+            return instIdx < verIdx ? 'downgrade' : 'upgrade'
+          } else {
+            return 'uninstall'
+          }
+        }
+        return 'uninstall'
+      }
+      if (this.missingDependencies) {
+        return this.aMissingDependency.link ? 'missingKnownDependency' : 'missingUnknownDependency'
+      }
+      return 'install'
+    },
+    buttonColor () {
+      switch (this.state) {
+        case 'install':
+          return 'blue'
+        case 'uninstall':
+          return 'red'
+        case 'upgrade':
+          return 'green'
+        case 'downgrade':
+        case 'missingKnownDependency':
+          return 'orange'
+        case 'missingUnknownDependency':
+        default:
+          return 'gray'
+      }
+    },
+    buttonText () {
+      switch (this.state) {
+        case 'install':
+          return this.installableAddon ? 'Install' : 'Add'
+        case 'uninstall':
+          return 'Remove'
+        case 'upgrade':
+          return 'Upgrade to version ' + this.addon.version
+        case 'downgrade':
+          return 'Downgrade to version ' + this.addon.version
+        case 'missingKnownDependency':
+          return 'Go to ' + this.aMissingDependency.name
+        case 'missingUnknownDependency':
+          return 'Close'
+        default:
+          return ''
+      }
     },
     addonTitle () {
-      return this.addon.versions && Object.keys(this.addon.versions).length > 1 ? this.addon.label + ' ' + this.addon.version : this.addon.label
+      return this.versioned ? this.addon.label + ' ' + this.addon.version : this.addon.label
+    },
+    versioned () {
+      return this.addon && this.addon.versions && Object.keys(this.addon.versions).length > 1
     },
     installableAddon () {
       return (this.addon && this.addon.contentType && (this.addon.contentType === 'application/vnd.openhab.bundle' || this.addon.contentType.indexOf('application/vnd.openhab.feature') === 0))
@@ -227,6 +280,26 @@ export default {
     toggleSwipeStep () {
       const self = this
       self.$refs.sheet.f7Sheet.stepToggle('.demo-sheet-swipe-to-step')
+    },
+    buttonClicked () {
+      switch (this.state) {
+        case 'install':
+        case 'upgrade':
+        case 'downgrade':
+          this.install()
+          break
+        case 'uninstall':
+          this.uninstall()
+          break
+        case 'missingKnownDependency':
+          this.gotoDependency()
+          break
+        case 'missingUnknownDependency':
+          this.close()
+          break
+        default:
+          console.error('Button clicked in addon-details-sheet, but state is unexpected: ' + this.state)
+      }
     },
     install () {
       const self = this
