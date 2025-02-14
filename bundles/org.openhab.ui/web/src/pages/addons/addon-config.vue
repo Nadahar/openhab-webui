@@ -204,7 +204,7 @@ export default {
             this.$nextTick(() => {
               this.loadingLoggers = false
             })
-          })
+          }).catch(() => {})
         })
       } else {
         this.loadingLoggers = false
