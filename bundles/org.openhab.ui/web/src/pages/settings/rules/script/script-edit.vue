@@ -674,6 +674,11 @@ export default {
           case 'state':
             this.$set(this.rule, 'status', JSON.parse(event.payload)) // e.g. {"status":"RUNNING","statusDetail":"NONE"}
             break
+          case 'updated':
+            if (!this.dirty) {
+              this.load()
+            }
+            break
         }
       })
     },
