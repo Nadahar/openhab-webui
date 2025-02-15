@@ -5,7 +5,7 @@ export default {
     ruleStatusBadgeColor (statusInfo) {
       if (statusInfo.status === 'IDLE') return 'green'
       if (statusInfo.statusDetail === 'DISABLED') return 'gray'
-      if (statusInfo.status === 'UNINITIALIZED') return 'red'
+      if (statusInfo.status === 'UNINITIALIZED') return statusInfo.statusDetail === 'TEMPLATE_PENDING' ? 'orange' : 'red'
       if (statusInfo.status === 'INITIALIZING') return 'yellow'
       if (statusInfo.status === 'RUNNING') return 'orange'
       return 'green'

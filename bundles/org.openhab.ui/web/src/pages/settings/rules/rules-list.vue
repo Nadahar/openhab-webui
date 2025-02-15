@@ -126,11 +126,14 @@
               @click.exact="(e) => click(e, rule)"
               link=""
               :title="rule.name"
-              :text="rule.uid"
-              :footer="rule.description"
+              :text="ruleText(rule)"
               :badge="showScenes ? '' : ruleStatusBadgeText(ruleStatuses[rule.uid])"
               :badge-color="ruleStatusBadgeColor(ruleStatuses[rule.uid])">
-              <div slot="footer">
+              <div slot="footer" class="footer-inner">
+                <div class="footer-columns">
+                  <div class="rule-description">{{ rule.description }}</div>
+                  <f7-button v-if="canReinstantiate(rule)" class="reinstantiate-button" tooltip="Reinstantiate from template" icon-f7="arrow_2_circlepath" round fill small />
+                </div>
                 <f7-chip v-for="tag in rule.tags.filter((t) => t !== 'Script' && t !== 'Scene')" :key="tag" :text="tag" media-bg-color="blue" style="margin-right: 6px">
                   <f7-icon slot="media" ios="f7:tag_fill" md="material:label" aurora="f7:tag_fill" />
                 </f7-chip>
@@ -150,6 +153,30 @@
   </f7-page>
 </template>
 
+<style lang="stylus">
+.item-footer
+  .footer-inner
+    .footer-columns
+      display flex
+      flex-direction row
+      flex-wrap nowrap
+      justify-content space-between
+      align-items center
+      margin-block-end 2px
+      .rule-description
+        margin-block-start 4px
+      .reinstantiate-button
+        flex-shrink 0
+        margin-inline-start 10px
+        --f7-button-bg-color #6495ed
+        --f7-button-pressed-bg-color #1b61e4
+        --f7-button-hover-bg-color #96b6f3
+        margin-inline-end calc(var(--f7-list-chevron-icon-area))
+        display flex
+        justify-content center
+        align-items center
+        padding 4px
+</style>
 <script>
 import RuleStatus from '@/components/rule/rule-status-mixin'
 
@@ -171,7 +198,8 @@ export default {
       selectedTags: [],
       selectedItems: [],
       showCheckboxes: false,
-      eventSource: null
+      eventSource: null,
+      templates: null
     }
   },
   computed: {
@@ -227,6 +255,9 @@ export default {
         filter = '&tags=Scene'
       }
 
+      this.$oh.api.get('/rest/templates').then((templateData) => {
+        this.$set(this, 'templates', templateData)
+      }).catch(() => {})
       this.$oh.api.get('/rest/rules?summary=true' + filter).then(data => {
         this.rules = data.sort((a, b) => {
           return a.name.localeCompare(b.name)
@@ -395,6 +426,19 @@ export default {
     },
     isTagSelected (tag) {
       return this.selectedTags.includes(tag)
+    },
+    ruleText (rule) {
+      if (!rule.templateUID) {
+        return rule.uid
+      }
+      let template = this.templates ? this.templates.find((t) => t.uid === rule.templateUID) : undefined
+      return rule.uid + ' (Template: ' + (template ? template.label : rule.templateUID) + ')'
+    },
+    canReinstantiate (rule) {
+      if (!rule || !rule.templateUID || !rule.templateState || rule.templateState === 'no-template') {
+        return false
+      }
+      return this.templates ? this.templates.some((t) => t.uid === rule.templateUID) : false
     }
   }
 }
