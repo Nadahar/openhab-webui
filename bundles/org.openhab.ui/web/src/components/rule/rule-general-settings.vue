@@ -9,13 +9,14 @@
                          @input="rule.uid = $event.target.value" :clear-button="createMode">
             <f7-link slot="inner" icon-f7="hammer_fill" style="margin-top: 4px; margin-left: 4px; margin-bottom: auto" tooltip="Fix ID" v-if="createMode && $refs.ruleId?.state?.inputInvalid && rule.uid.trim()" @click="$oh.utils.normalizeInput('#input')" />
           </f7-list-input>
+          <f7-list-input v-if="!createMode && templateName" label="Template" type="text" :value="templateName" disabled />
           <f7-list-input label="Label" type="text" :placeholder="`${type} label for display purposes`" :info="(createMode) ? 'Required' : ''" :value="rule.name" required validate
                          :disabled="!editable" @input="rule.name = $event.target.value" :clear-button="editable" />
           <f7-list-input label="Description" type="text" :value="rule.description"
                          :disabled="!editable" @input="rule.description = $event.target.value" :clear-button="editable" />
         </f7-list>
         <f7-list inline-labels no-hairlines-md>
-          <tag-input v-if="!createMode || !hasRuleTemplate" title="Tags" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
+          <tag-input v-if="!createMode || !hasTemplate" title="Tags" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
         </f7-list>
       </f7-col>
     </f7-block>
@@ -33,7 +34,7 @@
                          :disabled="true" @input="rule.description = $event.target.value" :clear-button="editable" />
         </f7-list>
         <f7-list inline-labels no-hairlines-md>
-          <tag-input v-if="!createMode || !hasRuleTemplate" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
+          <tag-input v-if="!createMode || !hasTemplate" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
         </f7-list>
       </f7-col>
     </f7-block>
@@ -44,7 +45,7 @@
 import TagInput from '@/components/tags/tag-input.vue'
 
 export default {
-  props: ['rule', 'ready', 'createMode', 'hasRuleTemplate', 'inScriptEditor', 'inSceneEditor'],
+  props: ['rule', 'ready', 'createMode', 'hasTemplate', 'templates', 'inScriptEditor', 'inSceneEditor'],
   components: {
     TagInput
   },
@@ -56,6 +57,13 @@ export default {
       if (this.inScriptEditor) return 'Script'
       if (this.inSceneEditor) return 'Scene'
       return 'Rule'
+    },
+    templateName () {
+      if (!this.rule || !this.rule.templateUID || !this.templates) {
+        return undefined
+      }
+      let result = this.templates.find((t) => t.uid === this.rule.templateUID)
+      return result ? result.label : this.rule.templateUID
     }
   },
   methods: {
