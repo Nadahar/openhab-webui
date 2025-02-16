@@ -438,7 +438,7 @@ export default {
       }
       if (swipeoutElement && swipeoutElement.classList.contains('swipeout-opened')) return
 
-      if (mod.type && mod.type.indexOf('script') === 0) {
+      if (mod.type && (mod.type.indexOf('script') === 0 || mod.type === 'jsr223.ScriptedAction')) {
         this.editScriptDirect(ev, mod)
         return
       }
