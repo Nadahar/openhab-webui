@@ -29,11 +29,15 @@
       <f7-link color="green" v-show="selectedItems.length" v-if="!$theme.md && !showScenes" class="enable" @click="doDisableEnableSelected(true)" icon-ios="f7:play_circle" icon-aurora="f7:play_circle">
         &nbsp;Enable {{ selectedItems.length }}
       </f7-link>
+      <f7-link color="deeppurple" v-show="selectedItems.length === 1 && canReinstantiateItem(selectedItems[0])" v-if="!$theme.md && !showScenes" class="enable" icon-ios="f7:arrow_2_circlepath" icon-aurora="f7:arrow_2_circlepath">
+        &nbsp;Regenerate from template
+      </f7-link>
       <f7-link v-if="$theme.md" icon-md="material:close" icon-color="white" @click="showCheckboxes = false" />
       <div class="title" v-if="$theme.md">
         {{ selectedItems.length }} selected
       </div>
       <div class="right" v-if="$theme.md">
+        <f7-link v-if="!showScenes" v-show="selectedItems.length === 1 && canReinstantiateItem(selectedItems[0])" tooltip="Regenerate selected from template" icon-md="material:autorenew" icon-color="white" />
         <f7-link v-if="!showScenes" v-show="selectedItems.length" tooltip="Disable selected" icon-md="material:pause_circle_outline" icon-color="white" @click="doDisableEnableSelected(false)" />
         <f7-link v-if="!showScenes" v-show="selectedItems.length" tooltip="Enable selected" icon-md="material:play_circle_outline" icon-color="white" @click="doDisableEnableSelected(true)" />
         <f7-link v-show="selectedItems.length" icon-md="material:delete" icon-color="white" @click="removeSelected" />
@@ -127,18 +131,16 @@
               link=""
               :title="rule.name"
               :text="ruleText(rule)"
+              :footer="rule.description"
               :badge="showScenes ? '' : ruleStatusBadgeText(ruleStatuses[rule.uid])"
               :badge-color="ruleStatusBadgeColor(ruleStatuses[rule.uid])">
               <div slot="footer" class="footer-inner">
-                <div class="footer-columns">
-                  <div class="rule-description">{{ rule.description }}</div>
-                  <f7-button v-if="canReinstantiate(rule)" class="reinstantiate-button" tooltip="Reinstantiate from template" icon-f7="arrow_2_circlepath" round fill small />
-                </div>
                 <f7-chip v-for="tag in rule.tags.filter((t) => t !== 'Script' && t !== 'Scene')" :key="tag" :text="tag" media-bg-color="blue" style="margin-right: 6px">
                   <f7-icon slot="media" ios="f7:tag_fill" md="material:label" aurora="f7:tag_fill" />
                 </f7-chip>
               </div>
               <!-- <span slot="media" class="item-initial">{{initial}}</span> -->
+              <f7-icon v-if="rule.templateUID" slot="before-title" f7="doc_on_doc_fill" size="1rem" color="gray" />
               <f7-icon v-if="rule.editable === false" slot="after-title" f7="lock_fill" size="1rem" color="gray" />
             </f7-list-item>
           </f7-list-group>
@@ -155,27 +157,10 @@
 
 <style lang="stylus">
 .item-footer
+  margin-block-start 4px
+  margin-block-end 2px
   .footer-inner
-    .footer-columns
-      display flex
-      flex-direction row
-      flex-wrap nowrap
-      justify-content space-between
-      align-items center
-      margin-block-end 2px
-      .rule-description
-        margin-block-start 4px
-      .reinstantiate-button
-        flex-shrink 0
-        margin-inline-start 10px
-        --f7-button-bg-color #6495ed
-        --f7-button-pressed-bg-color #1b61e4
-        --f7-button-hover-bg-color #96b6f3
-        margin-inline-end calc(var(--f7-list-chevron-icon-area))
-        display flex
-        justify-content center
-        align-items center
-        padding 4px
+    margin-block-start 2px
 </style>
 <script>
 import RuleStatus from '@/components/rule/rule-status-mixin'
@@ -343,7 +328,7 @@ export default {
       if (this.showCheckboxes) {
         this.toggleItemCheck(event, item.uid, item)
       } else {
-        this.$f7router.navigate((item.editable) ? item.uid : '/settings/scripts/' + item.uid)
+        this.$f7router.navigate(item.uid)
       }
     },
     ctrlClick (event, item) {
@@ -371,7 +356,7 @@ export default {
     },
     doRemoveSelected () {
       if (this.selectedItems.some((i) => this.rules.find((rule) => rule.uid === i).editable === false)) {
-        this.$f7.dialog.alert('Some of the selected rules are not modifiable because they have been provisioned by files')
+        this.$f7.dialog.alert('Some of the selected rules are not modifiable')
         return
       }
 
@@ -434,8 +419,15 @@ export default {
       let template = this.templates ? this.templates.find((t) => t.uid === rule.templateUID) : undefined
       return rule.uid + ' (Template: ' + (template ? template.label : rule.templateUID) + ')'
     },
+    canReinstantiateItem (item) {
+      if (!this.rules) {
+        return false
+      }
+      let rule = this.rules.find((r) => r.uid === item)
+      return rule ? this.canReinstantiate(rule) : false
+    },
     canReinstantiate (rule) {
-      if (!rule || !rule.templateUID || !rule.templateState || rule.templateState === 'no-template') {
+      if (!rule || !rule.templateUID || !rule.templateState || rule.templateState === 'no-template' || rule.templateState === 'template-missing') {
         return false
       }
       return this.templates ? this.templates.some((t) => t.uid === rule.templateUID) : false
