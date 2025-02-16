@@ -26,6 +26,7 @@
           <f7-col v-if="!createMode">
             <div class="float-right align-items-flex-start align-items-center">
               <!-- <f7-toggle class="enable-toggle"></f7-toggle> -->
+              <f7-link v-if="canRegenerate" :icon-color="'deeppurple'" :tooltip="'Regenerate from template'" icon-md="f7:arrow_2_circlepath" icon-ios="f7:arrow_2_circlepath" icon-aurora="f7:arrow_2_circlepath" icon-size="32" color="deeppurple" />
               <f7-link :icon-color="(rule.status.statusDetail === 'DISABLED') ? 'orange' : 'gray'" :tooltip="((rule.status.statusDetail === 'DISABLED') ? 'Enable' : 'Disable') + (($device.desktop) ? ' (Ctrl-D)' : '')" icon-ios="f7:pause_circle" icon-md="f7:pause_circle" icon-aurora="f7:pause_circle" icon-size="32" color="orange" @click="toggleDisabled" />
               <f7-link :tooltip="'Run Now' + (($device.desktop) ? ' (Ctrl-R)' : '')" icon-ios="f7:play_round" icon-md="f7:play_round" icon-aurora="f7:play_round" icon-size="32" :color="(rule.status.status === 'IDLE') ? 'blue' : 'gray'" @click="runNow" />
             </div>
@@ -54,7 +55,7 @@
           </f7-col>
         </f7-block>
 
-        <rule-general-settings :rule="rule" :ready="ready" :createMode="createMode" :hasTemplate="hasTemplate" :templates="templates" />
+        <rule-general-settings :rule="rule" :ready="ready" :createMode="createMode" :hasTemplate="hasTemplate" :templateName="templateName" />
 
         <f7-block v-if="ready" class="block-narrow">
           <f7-block-footer v-if="!isEditable" class="no-margin padding-left">
@@ -137,7 +138,7 @@
                 Duplicate Rule
               </f7-list-button>
               <f7-list-button color="red" @click="deleteRule">
-                Remove Rule
+                Delete Rule
               </f7-list-button>
             </f7-list>
           </f7-col>
@@ -367,6 +368,8 @@ export default {
     },
     duplicateRule () {
       let ruleClone = cloneDeep(this.rule)
+      ruleClone.templateUID = undefined
+      ruleClone.templateState = 'no-template'
       this.$f7router.navigate({
         url: '/settings/rules/duplicate'
       }, {
@@ -596,6 +599,19 @@ export default {
   computed: {
     hasTemplate () {
       return this.rule && this.currentTemplate !== null
+    },
+    templateName () {
+      if (!this.rule || !this.rule.templateUID || !this.templates) {
+        return undefined
+      }
+      let result = this.templates.find((t) => t.uid === this.rule.templateUID)
+      return result ? result.label : this.rule.templateUID
+    },
+    canRegenerate () {
+      if (!this.rule || !this.rule.templateUID || !this.rule.templateState || this.rule.templateState === 'no-template' || this.rule.templateState === 'template-missing') {
+        return false
+      }
+      return this.templates ? this.templates.some((t) => t.uid === this.rule.templateUID) : false
     },
     templateTopicLink () {
       if (!this.currentTemplate) return null
