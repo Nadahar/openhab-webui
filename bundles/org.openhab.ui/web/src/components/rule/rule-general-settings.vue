@@ -14,7 +14,7 @@
                          :disabled="!editable" @input="rule.description = $event.target.value" :clear-button="editable" />
         </f7-list>
         <f7-list inline-labels no-hairlines-md>
-          <tag-input v-if="!createMode || !hasTemplate" title="Tags" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
+          <tag-input v-if="!(createMode && hasTemplate) && !stubMode" title="Tags" :item="rule" :disabled="!editable" :showSemanticTags="true" :inScriptEditor="inScriptEditor" :inSceneEditor="inSceneEditor" />
         </f7-list>
       </f7-col>
     </f7-block>
@@ -43,7 +43,7 @@
 import TagInput from '@/components/tags/tag-input.vue'
 
 export default {
-  props: ['rule', 'ready', 'createMode', 'hasTemplate', 'templateName', 'inScriptEditor', 'inSceneEditor'],
+  props: ['rule', 'ready', 'createMode', 'stubMode', 'hasTemplate', 'templateName', 'inScriptEditor', 'inSceneEditor'],
   components: {
     TagInput
   },
