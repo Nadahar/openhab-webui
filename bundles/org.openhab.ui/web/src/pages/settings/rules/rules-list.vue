@@ -130,17 +130,19 @@
               @click.exact="(e) => click(e, rule)"
               link=""
               :title="rule.name"
-              :text="ruleText(rule)"
+              :text="rule.uid"
               :footer="rule.description"
               :badge="showScenes ? '' : ruleStatusBadgeText(ruleStatuses[rule.uid])"
               :badge-color="ruleStatusBadgeColor(ruleStatuses[rule.uid])">
               <div slot="footer" class="footer-inner">
+                <f7-chip v-if="rule.templateUID" :text="templateName(rule)" media-bg-color="orange" style="margin-right: 2px">
+                  <f7-icon slot="media" ios="f7:doc_on_doc_fill" md="material:file_copy" aurora="f7:doc_on_doc_fill" />
+                </f7-chip>
                 <f7-chip v-for="tag in rule.tags.filter((t) => t !== 'Script' && t !== 'Scene')" :key="tag" :text="tag" media-bg-color="blue" style="margin-right: 6px">
                   <f7-icon slot="media" ios="f7:tag_fill" md="material:label" aurora="f7:tag_fill" />
                 </f7-chip>
               </div>
               <!-- <span slot="media" class="item-initial">{{initial}}</span> -->
-              <f7-icon v-if="rule.templateUID" slot="before-title" f7="doc_on_doc_fill" size="1rem" color="gray" />
               <f7-icon v-if="rule.editable === false" slot="after-title" f7="lock_fill" size="1rem" color="gray" />
             </f7-list-item>
           </f7-list-group>
@@ -445,12 +447,9 @@ export default {
     isTagSelected (tag) {
       return this.selectedTags.includes(tag)
     },
-    ruleText (rule) {
-      if (!rule.templateUID) {
-        return rule.uid
-      }
+    templateName (rule) {
       let template = this.templates ? this.templates.find((t) => t.uid === rule.templateUID) : undefined
-      return rule.uid + ' (Template: ' + (template ? template.label : rule.templateUID) + ')'
+      return template ? template.label : rule.templateUID
     },
     canRegenerateItem (item) {
       if (!this.rules) {
