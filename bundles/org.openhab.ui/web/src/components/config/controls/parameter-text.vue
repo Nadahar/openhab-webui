@@ -5,46 +5,27 @@
            style="padding-top: var(--f7-list-item-padding-vertical); color: var(--f7-text-color)">
         {{ configDescription.label }}
       </div>
-      <!--f7-link
-        v-if="value"
-        :style="{
-          top: '1rem',
-          float: 'right',
-          visibility: configDescription.required ? 'hidden' : 'visible',
-          opacity: configDescription.required ? 0 : 1,
-          cursor: 'pointer',
-          pointerEvents: 'initial'
-        }" class="input-clear-button margin-right" @click="updateValue(undefined)" /-->
     </f7-block-header>
-    <f7-list-item v-for="v in values" no-hairline :key="v" :title="v">
-      <f7-link
-        v-if="!configDescription.readOnly && v"
-        :style="{
-          top: '1rem',
-          float: 'right',
-          visibility: 'visible',
-          opacity: 1,
-          cursor: 'pointer',
-          pointerEvents: 'initial'
-        }" class="input-clear-button margin-right" @click="removeValue(v)" />
-    </f7-list-item>
+    <f7-list-input
+      v-for="(v, idx) in values"
+      no-hairline
+      :key="v"
+      :type="controlType"
+      :pattern="configDescription.pattern"
+      :autocomplete="autoCompleteOptions ? 'off' : ''"
+      :clear-button="true"
+      @input:clear="removeValueIdx(idx)"
+      @input="updateValueIdx(idx, $event)"
+      :value="v" />
     <f7-list-input
       v-if="!configDescription.readOnly"
       ref="input"
       :type="controlType"
       :pattern="configDescription.pattern"
       :autocomplete="autoCompleteOptions ? 'off' : ''"
-      :clear-button="true"
-      @input="addValue"
-      :placeholder="configDescription.placeholder">
-      <f7-link class="input-add-button margin-right" color="green" slot="inner-end" @click="showPassword = !showPassword">
-        <f7-icon size="20" :f7="'plus_circle_fill'" />
-      </f7-link>
-    </f7-list-input>
-    <!--f7-list-item radio v-for="option in configDescription.options" no-hairline
-                  :value="option.value" radio-icon="start"
-                  @change="(!configDescription.required) ? updateValue(undefined) : updateValue(option.value)"
-                  :key="option.value" :title="option.label" :name="configDescription.name" /-->
+      :clear-button="false"
+      @input:notempty="addValue"
+      :placeholder="configDescription.placeholder" />
   </ul>
   <ul v-else>
     <f7-list-input
@@ -71,19 +52,28 @@
 </template>
 
 <style lang="stylus">
-.aurora .input-add-button:after
+.input-controls
+  visibility visible
+  opacity 1
+.item-input-with-value .input-clear-button, .input-with-value .input-clear-button
+  visibility visible
+  opacity 1
+.item-input-with-value .input-add-button, .input-with-value .input-add-button
+  visibility visible
+  opacity 1
+/*.aurora .input-add-button:after
   content: 'plus_circle_fill';
   /* font-size: calc(var(--f7-input-clear-button-size) /(14 / 10)); */
-  font-size: var(--f7-input-clear-button-size);
-  line-height: 1.4;
-.input-add-button:after
+/*  font-size: var(--f7-input-clear-button-size);
+  line-height: 1.4;*/
+/* .input-add-button:after
     font-family: 'Framework7 Icons';
     /* font-family: 'framework7-core-icons'; */
-    font-weight: normal;
+/*    font-weight: normal;
     font-style: normal;
     line-height: 1;
     /* letter-spacing: normal; */
-    text-transform: none;
+/*    text-transform: none;
     white-space: nowrap;
     word-wrap: normal;
     direction: ltr;
@@ -96,7 +86,7 @@
     display: block;
     width: 100%;
     height: 100%;
-    font-size: 20px;
+    font-size: 20px;*/
 </style>
 <script>
 export default {
@@ -131,7 +121,8 @@ export default {
     return {
       autoCompleteOptions: null,
       showPassword: false,
-      values: ['app/aa', 'app/bb'] // Used for multiple value parameters only
+      values: ['app/aa', 'app/bb'], // Used for multiple value parameters only
+      suspendEvents: false
     }
   },
   mounted () {
@@ -144,7 +135,7 @@ export default {
       })
       const inputControl = this.$refs.input
       if (!inputControl || !inputControl.$el) return
-      const inputElement = this.$$(inputControl.$el).find(this.configDescription.multiple ? 'input' : 'input') // tODO: (Nad) Remove ternary?
+      const inputElement = this.$$(inputControl.$el).find('input')
       this.autoCompleteOptions = this.$f7.autocomplete.create({
         inputEl: inputElement,
         openIn: 'dropdown',
@@ -168,21 +159,69 @@ export default {
       // const value = (this.configDescription.multiple) ? event.target.value.split('\n') : event.target.value
       this.$emit('input', event.target.value)
     },
-    addValue (value) {
-      if (!this.multiple || !value) {
+    updateValueIdx (idx, event) {
+      if (!this.multiple || idx < 0 || !this.values || idx >= this.values.length) return
+      const newValues = [...this.values]
+      newValues[idx] = event.target.value
+      this.$set(this, 'values', newValues)
+      this.emitValues()
+    },
+    addValue (event) {
+      if (this.suspendEvents || !this.multiple || !event) {
         return
       }
-      let newValues = [...this.values]
-      newValues.push(value)
-      // this.$set(this, 'values', newValues)
-      // this.$emit('input', this.values)
+      const v = event.target?.value
+      if (!v) return
+      let newValues = this.values.filter((val, idx) => val && this.values.indexOf(val) === idx)
+      if (newValues.some((val) => val === v)) return
+      newValues.push(v)
+      this.suspendEvents = true
+      this.$set(this, 'values', newValues)
+      this.emitValues()
+
+      this.$nextTick(() => {
+        const inputControl = this.$refs.input
+        if (inputControl && inputControl.$el) {
+          const inputElements = this.$$(inputControl.$el).find('input')
+          if (inputElements && inputElements.length > 0) {
+            const inputElement = inputElements[0]
+            inputElement.value = ''
+            let prev = this.findAncestor(inputElement, 'li')?.previousElementSibling
+            if (prev) {
+              let prevInput = this.$$(prev).find('input')
+              if (prevInput) {
+                prevInput.focus()
+              }
+            }
+          }
+        }
+        this.suspendEvents = false
+      })
     },
-    removeValue (value) {
+    removeValue (value) { // TODO: (Nad) In use?
       if (!this.multiple || !this.values) {
         return
       }
       this.$set(this, 'values', this.values.filter((v) => v !== value))
-      this.$emit('input', this.values)
+      this.emitValues()
+    },
+    removeValueIdx (idx) {
+      if (this.suspendEvents || !this.multiple || idx < 0 || !this.values || idx >= this.values.length) return
+      let newValues = [...this.values]
+      newValues.splice(idx, 1)
+      this.suspendEvents = true
+      this.$set(this, 'values', newValues)
+      this.emitValues()
+      this.$nextTick(() => {
+        this.suspendEvents = false
+      })
+    },
+    emitValues () {
+      this.$emit('input', this.values.filter((v, idx) => v && this.values.indexOf(v) === idx))
+    },
+    findAncestor (el, selector) {
+      while ((el = el.parentElement) && !el.matches(selector));
+      return el
     }
   }
 }
