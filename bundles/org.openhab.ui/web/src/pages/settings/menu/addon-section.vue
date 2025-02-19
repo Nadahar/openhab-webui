@@ -22,7 +22,7 @@ export default {
   props: ['addonsInstalled', 'addonsServices', 'expanded'],
   computed: {
     addonsSettings () {
-      if (this.expanded) return this.addonsInstalled
+      if (this.expanded) return this.addonsInstalled.filter((a) => a.configDescriptionURI)
       return this.addonsInstalled.map((addon) => {
         const show = addon.type === 'persistence' ||
           this.addonsServices.findIndex((as) => as.configDescriptionURI.split(':')[1] === addon.id) > -1
