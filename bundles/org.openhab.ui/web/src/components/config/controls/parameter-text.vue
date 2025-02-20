@@ -1,5 +1,5 @@
 <template>
-  <ul v-if="multiple">
+  <ul v-if="multiple" ref="inputs">
     <f7-block-header class="no-margin">
       <div class="margin-horizontal item-label"
            style="padding-top: var(--f7-list-item-padding-vertical); color: var(--f7-text-color)">
@@ -9,22 +9,24 @@
     <f7-list-input
       v-for="(v, idx) in values"
       no-hairline
-      :key="v"
+      :key="idx"
       :type="controlType"
       :pattern="configDescription.pattern"
-      :autocomplete="autoCompleteOptions ? 'off' : ''"
+      :autocomplete="options ? 'off' : ''"
       :clear-button="true"
       @input:clear="removeValueIdx(idx)"
       @input="updateValueIdx(idx, $event)"
+      @focus="gotFocus"
       :value="v" />
     <f7-list-input
       v-if="!configDescription.readOnly"
       ref="input"
       :type="controlType"
       :pattern="configDescription.pattern"
-      :autocomplete="autoCompleteOptions ? 'off' : ''"
+      :autocomplete="options ? 'off' : ''"
       :clear-button="false"
       @input:notempty="addValue"
+      @focus="gotFocus"
       :placeholder="configDescription.placeholder" />
   </ul>
   <ul v-else>
@@ -33,8 +35,8 @@
       :floating-label="$theme.md"
       :label="configDescription.label"
       :name="configDescription.name"
-      :value="formattedValue"
-      :autocomplete="autoCompleteOptions ? 'off' : ''"
+      :value="value"
+      :autocomplete="options ? 'off' : ''"
       :placeholder="configDescription.placeholder"
       :pattern="configDescription.pattern"
       :required="configDescription.required" validate
@@ -51,91 +53,47 @@
   </ul>
 </template>
 
-<style lang="stylus">
-.input-controls
-  visibility visible
-  opacity 1
-.item-input-with-value .input-clear-button, .input-with-value .input-clear-button
-  visibility visible
-  opacity 1
-.item-input-with-value .input-add-button, .input-with-value .input-add-button
-  visibility visible
-  opacity 1
-/*.aurora .input-add-button:after
-  content: 'plus_circle_fill';
-  /* font-size: calc(var(--f7-input-clear-button-size) /(14 / 10)); */
-/*  font-size: var(--f7-input-clear-button-size);
-  line-height: 1.4;*/
-/* .input-add-button:after
-    font-family: 'Framework7 Icons';
-    /* font-family: 'framework7-core-icons'; */
-/*    font-weight: normal;
-    font-style: normal;
-    line-height: 1;
-    /* letter-spacing: normal; */
-/*    text-transform: none;
-    white-space: nowrap;
-    word-wrap: normal;
-    direction: ltr;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-    -moz-osx-font-smoothing: grayscale;
-    -moz-font-feature-settings: "liga";
-    font-feature-settings: "liga";
-    text-align: center;
-    display: block;
-    width: 100%;
-    height: 100%;
-    font-size: 20px;*/
-</style>
 <script>
 export default {
   props: ['configDescription', 'value'],
   computed: {
     controlType () {
       if (this.configDescription.context === 'password' && !this.showPassword) return 'password'
-      // if (this.configDescription.multiple) return 'textarea'
       return 'text'
     },
-    formattedValue () {
-      if (this.multiple) {
-        if (!this.value) { // TODO: (Nad) Temp hack
-          // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-          this.values = []
-        } else if (Array.isArray(this.value)) {
-          // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-          this.values = this.value
-        } else {
-          // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-          this.values = [this.value]
-        }
-        return (this.value) ? this.value.join('\n') : ''
-      }
-      return this.value
-    },
     multiple () {
-      return this.configDescription && this.configDescription.multiple
+      return this.configDescription?.multiple
+    },
+    options () {
+      let result
+      if (this.configDescription?.options && this.configDescription.options.length > 0) {
+        result = this.configDescription.options.map((o) => {
+          return {
+            id: o.value,
+            text: (o.label) ? (o.value !== o.label) ? `${o.label} (${o.value})` : o.label : o.value
+          }
+        })
+      }
+      return result
     }
   },
   data () {
     return {
       autoCompleteOptions: null,
       showPassword: false,
-      values: ['app/aa', 'app/bb'], // Used for multiple value parameters only
+      values: [], // Used for multiple value parameters only
       suspendEvents: false
     }
   },
+  created () {
+    this.setValues()
+  },
   mounted () {
-    if (this.configDescription.options && this.configDescription.options.length > 0) {
-      const options = this.configDescription.options.map((o) => {
-        return {
-          id: o.value,
-          text: (o.label) ? (o.value !== o.label) ? `${o.label} (${o.value})` : o.label : o.value
-        }
-      })
+    if (!this.multiple && this.options) {
       const inputControl = this.$refs.input
       if (!inputControl || !inputControl.$el) return
       const inputElement = this.$$(inputControl.$el).find('input')
+      const options = this.options
       this.autoCompleteOptions = this.$f7.autocomplete.create({
         inputEl: inputElement,
         openIn: 'dropdown',
@@ -147,9 +105,7 @@ export default {
     }
   },
   beforeDestroy () {
-    if (this.autoCompleteOptions) {
-      this.$f7.autocomplete.destroy(this.autoCompleteOptions)
-    }
+    this.destroyAutoCompleteOptions()
   },
   methods: {
     updateValue (event) {
@@ -198,13 +154,6 @@ export default {
         this.suspendEvents = false
       })
     },
-    removeValue (value) { // TODO: (Nad) In use?
-      if (!this.multiple || !this.values) {
-        return
-      }
-      this.$set(this, 'values', this.values.filter((v) => v !== value))
-      this.emitValues()
-    },
     removeValueIdx (idx) {
       if (this.suspendEvents || !this.multiple || idx < 0 || !this.values || idx >= this.values.length) return
       let newValues = [...this.values]
@@ -216,12 +165,50 @@ export default {
         this.suspendEvents = false
       })
     },
+    setValues () {
+      if (this.multiple) {
+        let result
+        if (!this.value) {
+          result = []
+        } else if (Array.isArray(this.value)) {
+          result = this.value
+        } else {
+          result = [this.value]
+        }
+        this.$set(this, 'values', result)
+      }
+    },
     emitValues () {
       this.$emit('input', this.values.filter((v, idx) => v && this.values.indexOf(v) === idx))
     },
     findAncestor (el, selector) {
       while ((el = el.parentElement) && !el.matches(selector));
       return el
+    },
+    gotFocus (event) {
+      if (!event?.target || !this.options?.length) return
+      if (this.autoCompleteOptions) {
+        if (this.autoCompleteOptions.inputEl === event.target) return
+        this.destroyAutoCompleteOptions()
+      }
+      const options = this.values?.length ? this.options.filter((o) => !this.values.some((v) => v.toLowerCase() === o.text.toLowerCase())) : this.options
+      if (!options?.length) return
+      this.autoCompleteOptions = this.$f7.autocomplete.create({
+        inputEl: event.target,
+        openIn: 'dropdown',
+        requestSourceOnOpen: true,
+        source (query, render) {
+          render(options.filter((o) => o.text.toLowerCase().indexOf(query.toLowerCase()) >= 0))
+        }
+      })
+      this.autoCompleteOptions.open()
+    },
+    destroyAutoCompleteOptions () {
+      if (this.autoCompleteOptions) {
+        this.autoCompleteOptions.close()
+        this.$f7.autocomplete.destroy(this.autoCompleteOptions)
+      }
+      this.autoCompleteOptions = null
     }
   }
 }
