@@ -6,30 +6,23 @@
 	https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<config-description uri="ui:main">
-		<parameter name="inlineSvg" type="text" required="true">
-			<label>Inline SVG</label>
-			<description>If enabled, any SVG icon provided by the openHAB icon server will automatically be converted to an
-				inline SVG in the WEB page, allowing control of its color with the sitemap widget property "iconcolor" in
-				the case
-				where the SVG icon sets "currentColor" as the fill color. Note that this will work with custom SVG icons but not
-				with all the packaged icons from the classic iconset since they are defined with a hard-coded color palette. This
-				feature is disabled by default due to additional non-standard processing required leading to a larger page size and
-				because it is unnecessary if you only use Material/framework7/iconify icons or openHAB icons from the classic icon
-				set.</description>
+		<parameter name="testParam" type="text" required="false">
+			<label>Test Parameter</label>
+			<description>It's just a test</description>
+            <limitToOptions>false</limitToOptions>
 			<options>
 				<option value="true">Enable</option>
 				<option value="false">Disable</option>
 			</options>
-			<default>false</default>
 		</parameter>
-		<parameter name="ruleEditorDirect" type="text" multiple="true" required="false">
-			<label>Rule Types Editor Direct</label>
-			<description>Rules can be opened directly in the script editor based on the media type.</description>
+		<parameter name="ruleTypeAsScript" type="text" multiple="true" required="false">
+			<label>View Rule Type as Script</label>
+			<description>Read-only rules can be opened directly in the script editor based on the media type of the action.</description>
 			<limitToOptions>false</limitToOptions>
-			<multipleLimit>19</multipleLimit>
 			<options>
-				<option value="application/javascript">application/javascript</option>
-				<option value="application/ruby">application/ruby</option>
+				<option value="application/javascript">JavaScript Rule</option>
+				<option value="application/ruby">Ruby Rule</option>
+				<option value="application/vnd.openhab.dsl.rule">DSL Rule</option>
 			</options>
 		</parameter>
 	</config-description>
