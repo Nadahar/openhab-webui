@@ -15,5 +15,15 @@ export default {
       if (statusInfo.statusDetail !== 'NONE') return RuleStatusLabels[statusInfo.statusDetail]
       return statusInfo.status
     }
+  },
+  /**
+   * Determines if the module is "opaque" in that it doesn't actually execute the content of the module, but instead executes
+   * a referenced in-memory runnable method.
+   *
+   * @param module the module to evaluate
+   */
+  isOpaqueModule (module) {
+    if (!module?.type) return false
+    return module.type === 'jsr223.ScriptedAction' || module.type === 'jsr223.ScriptedCondition' || module.type === 'jsr223.ScriptedTrigger'
   }
 }
