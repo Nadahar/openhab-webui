@@ -5,13 +5,25 @@
       <f7-col v-if="!createMode && languages">
         <f7-list inline-labels style="margin-top: 0">
           <template v-if="module && !isScriptRule">
-            <f7-list-input :label="scriptType + ' Title'" type="text" :value="module.label" :placeholder="suggestedModuleTitle(module, moduleType)" @input="$set(module, 'label', $event.target.value)" :disabled="!editable" :clear-button="editable" />
-            <f7-list-input label="Description" type="text" :value="module.description" :placeholder="suggestedModuleDescription(module, moduleType)" @input="$set(module, 'description', $event.target.value)" :disabled="!editable" :clear-button="editable" />
+            <f7-list-input :label="scriptType + ' Title'" type="text" :value="moduleTitle" :placeholder="sugModuleTitle" @input="$set(module, 'label', $event.target.value)" :disabled="!editable" :clear-button="editable" />
+            <li v-if="hasOpaqueModule" class="opaque-warning">
+              <div class="item-content disabled">
+                <div class="item-inner">
+                  <div class="item-title item-label">
+                    Beware
+                  </div>
+                  <div class="item-input-wrap">
+                    This displayed code is just a representation of the code that is executed, the actual code might do something different
+                  </div>
+                </div>
+              </div>
+            </li>
+            <f7-list-input label="Description" type="text" :value="moduleDescription" :placeholder="sugModuleDescription" @input="$set(module, 'description', $event.target.value)" :disabled="!editable" :clear-button="editable" />
           </template>
           <f7-list-item title="Scripting Language" class="aligned-smart-select" :disabled="!editable" :key="mode" smart-select :smart-select-params="{openIn: 'sheet', closeOnSelect: true}">
             <select @change="$emit('newLanguage', $event.target.value)">
               <option v-if="!languages.map(l => l.contentType).includes(mode)" :key="mode" :value="mode" selected="true">
-                {{ mode }} (not installed)
+                {{ mode ? mode + ' (not installed)' : 'Unknown' }}
               </option>
               <option v-for="language in languages" :key="language.contentType" :value="language.contentType" :selected="language.contentType === mode">
                 {{ language.name }} ({{ language.version }})
@@ -23,6 +35,13 @@
     </f7-block>
   </div>
 </template>
+
+<style lang="stylus">
+.list li.opaque-warning
+  background-color #009dff22
+  .item-input-wrap
+    font-size calc(var(--f7-list-font-size) - 2px)
+</style>
 
 <script>
 import RuleGeneralSettings from '@/components/rule/rule-general-settings.vue'
@@ -36,17 +55,39 @@ export default {
     RuleGeneralSettings
   },
   computed: {
+    moduleTitle () {
+      return this.editable || this.module?.label ? this.module.label : this.sugModuleTitle
+    },
+    sugModuleTitle () {
+      return this.suggestedModuleTitle(this.module)
+    },
+    moduleDescription () {
+      return this.editable || this.module?.description ? this.module.description : this.sugModuleDescription
+    },
+    sugModuleDescription () {
+      return this.suggestedModuleDescription(this.module)
+    },
     editable () {
       return this.createMode || (this.rule && this.rule.editable)
     },
     scriptType () {
       switch (this.module.type) {
         case 'script.ScriptAction':
+        case 'jsr223.ScriptedAction':
+          return 'Action'
         case 'script.ScriptCondition':
-          return this.module.type.slice('script.Script'.length)
+        case 'jsr223.ScriptedCondition':
+          return 'Condition'
+        case 'script.ScriptTrigger':
+        case 'jsr223.ScriptedTrigger':
+          return 'Trigger'
         default:
           return 'Module'
       }
+    },
+    hasOpaqueModule () {
+      if (!this.module.type) return false
+      return this.module.type === 'jsr223.ScriptedAction' || this.module.type === 'jsr223.ScriptedCondition' || this.module.type === 'jsr223.ScriptedTrigger'
     }
   }
 }
