@@ -19,6 +19,9 @@
       <f7-link @click="switchTab('code', toYaml)" :tab-link-active="currentTab === 'code'" class="tab-link">
         Code
       </f7-link>
+      <f7-link v-if="ready && (hasSource)" @click="switchTab('source')" :tab-link-active="currentTab === 'source'" class="tab-link">
+        Source
+      </f7-link>
     </f7-toolbar>
     <f7-tabs class="sitemap-editor-tabs">
       <f7-tab id="design" @tab:show="() => this.currentTab = 'design'" :tab-active="currentTab === 'design'">
@@ -120,7 +123,7 @@
                               :title="mod.label || suggestedModuleTitle(mod, null, section)"
                               :footer="mod.description || suggestedModuleDescription(mod, null, section)"
                               v-for="mod in rule[section]" :key="mod.id"
-                              :link="!showModuleControls"
+                              :link="!showModuleControls && !isOpaqueModule(mod)"
                               @click.native="(ev) => editModule(ev, section, mod)" swipeout>
                   <f7-link slot="media" v-if="isEditable" icon-color="red" icon-aurora="f7:minus_circle_filled" icon-ios="f7:minus_circle_filled" icon-md="material:remove_circle_outline" @click="showSwipeout" />
                   <f7-swipeout-actions right v-if="isEditable">
@@ -138,12 +141,12 @@
               </f7-list>
             </div>
           </f7-col>
-          <f7-col v-if="isEditable && !createMode && !stubMode">
+          <f7-col v-if="!createMode && !stubMode">
             <f7-list>
-              <f7-list-button color="blue" @click="duplicateRule">
+              <f7-list-button v-if="isEditable || !hasOpaqueModule" color="blue" @click="duplicateRule">
                 Duplicate Rule
               </f7-list-button>
-              <f7-list-button color="red" @click="deleteRule">
+              <f7-list-button v-if="isEditable" color="red" @click="deleteRule">
                 Delete Rule
               </f7-list-button>
             </f7-list>
@@ -154,6 +157,29 @@
         <f7-icon v-if="!createMode && !isEditable" f7="lock" class="float-right margin" style="opacity:0.5; z-index: 4000; user-select: none;" size="50" color="gray" tooltip="This code is not editable" />
         <editor v-if="currentTab === 'code'" class="rule-code-editor" mode="application/vnd.openhab.rule+yaml" :value="ruleYaml" :readOnly="!isEditable" @input="onEditorInput" />
         <!-- <pre class="yaml-message padding-horizontal" :class="[yamlError === 'OK' ? 'text-color-green' : 'text-color-red']">{{yamlError}}</pre> -->
+      </f7-tab>
+      <f7-tab v-if="ready && (hasSource)" id="source" @tab:show="() => { this.currentTab = 'source'} " :tab-active="currentTab === 'source'">
+        <f7-block v-if="ready && !createMode && !stubMode" class="block-narrow padding-left padding-right">
+          <f7-col>
+            <div v-if="rule.status" class="left">
+              Status:
+              <f7-chip class="margin-left"
+                       :text="rule.status.status"
+                       :color="ruleStatusBadgeColor(rule.status)"
+                       :tooltip="rule.status.statusDetail !== 'NONE' ? rule.status.statusDetail : undefined" />
+            </div>
+            <div v-if="sourceType" class="middle source-type-text">
+              {{ sourceTypeText }}
+            </div>
+            <div class="right">
+              <f7-link v-if="canRegenerate" :icon-color="'deeppurple'" :tooltip="'Regenerate from template'" icon-md="f7:arrow_2_circlepath" icon-ios="f7:arrow_2_circlepath" icon-aurora="f7:arrow_2_circlepath" icon-size="32" color="deeppurple" @click="regenerateFromTemplate" />
+              <f7-link :icon-color="(rule.status.statusDetail === 'DISABLED') ? 'orange' : 'gray'" :tooltip="((rule.status.statusDetail === 'DISABLED') ? 'Enable' : 'Disable') + (($device.desktop) ? ' (Ctrl-D)' : '')" icon-ios="f7:pause_circle" icon-md="f7:pause_circle" icon-aurora="f7:pause_circle" icon-size="32" color="orange" @click="toggleDisabled" />
+              <f7-link :tooltip="'Run Now' + (($device.desktop) ? ' (Ctrl-R)' : '')" icon-ios="f7:play_round" icon-md="f7:play_round" icon-aurora="f7:play_round" icon-size="32" :color="(rule.status.status === 'IDLE') ? 'blue' : 'gray'" @click="runNow" />
+            </div>
+          </f7-col>
+        </f7-block>
+        <f7-icon f7="lock" class="float-right margin" style="opacity:0.5; z-index: 4000; user-select: none;" size="50" color="gray" tooltip="Source code is not editable" />
+        <editor v-if="currentTab === 'source'" class="rule-source-viewer" :mode="sourceType" :value="source" readOnly="true" />
       </f7-tab>
     </f7-tabs>
   </f7-page>
@@ -187,7 +213,36 @@
   position absolute
   top 80%
   white-space pre-wrap
-
+#source
+  .block-narrow
+    position relative
+    height var(--f7-toolbar-height)
+    color var(--f7-block-strong-text-color)
+    background-color var(--f7-block-strong-bg-color)
+    .col
+      display flex
+      position relative
+      top 50%
+      transform translate(0, -50%)
+      flex-wrap nowrap
+      justify-content space-between
+      align-items center
+      .left
+        margin-right auto
+      .middle
+        position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0);
+      .right
+        margin-left auto
+  .rule-source-viewer.vue-codemirror
+    display block
+    top calc(var(--f7-navbar-height) + var(--f7-tabbar-height))
+    height calc(100% - 2*var(--f7-navbar-height) - var(--f7-toolbar-height) - var(--f7-block-margin-vertical) - 1rem)
+    width 100%
+  .source-type-text
+    font-size var(--f7-navbar-subtitle-font-size)
+    color var(--f7-block-footer-text-color)
 </style>
 
 <script>
@@ -204,6 +259,7 @@ import DirtyMixin from '../dirty-mixin'
 
 import ConfigSheet from '@/components/config/config-sheet.vue'
 import RuleGeneralSettings from '@/components/rule/rule-general-settings.vue'
+import AUTOMATION_LANGUAGES from '@/assets/automation-languages'
 
 export default {
   mixins: [RuleMixin, ModuleDescriptionSuggestions, RuleStatus, DirtyMixin],
@@ -276,6 +332,9 @@ export default {
           this.savedRule = cloneDeep(this.rule)
           this.ready = true
           this.loading = false
+          if (!this.createMode && !this.stubMode && this.hasOpaqueModule && this.hasSource) {
+            this.switchTab('source')
+          }
         })
       }
 
@@ -414,8 +473,10 @@ export default {
     },
     duplicateRule () {
       let ruleClone = cloneDeep(this.rule)
+      ruleClone.name = (ruleClone.name || '') + ' copy'
       ruleClone.templateUID = undefined
       ruleClone.templateState = 'no-template'
+      ruleClone.editable = true
       this.$f7router.navigate({
         url: '/settings/rules/duplicate'
       }, {
@@ -504,7 +565,7 @@ export default {
       this.rule.templateState = 'pending'
     },
     editModule (ev, section, mod) {
-      if (this.showModuleControls) return
+      if (this.showModuleControls || this.isOpaqueModule(mod)) return
       let swipeoutElement = ev.target
       ev.cancelBubble = true
       while (!swipeoutElement.classList.contains('swipeout')) {
@@ -682,6 +743,9 @@ export default {
         default:
           return value
       }
+    },
+    isOpaqueModule (module) {
+      return RuleStatus.isOpaqueModule(module)
     }
   },
   computed: {
@@ -700,6 +764,41 @@ export default {
         return false
       }
       return this.templates ? this.templates.some((t) => t.uid === this.rule.templateUID) : false
+    },
+    hasOpaqueModule () {
+      if (!this.rule) return false
+      return [...this.rule.actions || [], this.rule.triggers || [], this.rule.conditions || []].some((m) => RuleStatus.isOpaqueModule(m))
+    },
+    hasSource () {
+      let sourceContainer = this.sourceSource
+      return sourceContainer ? sourceContainer.source || sourceContainer.script : false
+    },
+    source () {
+      let sourceContainer = this.sourceSource
+      if (!sourceContainer) return ''
+      return sourceContainer.source || sourceContainer.script || ''
+    },
+    sourceTypeText () {
+      let result = this.sourceType
+      return result ? AUTOMATION_LANGUAGES[result]?.name || result : result
+    },
+    sourceType () {
+      let sourceContainer = this.sourceSource
+      return sourceContainer ? sourceContainer.sourceType || sourceContainer.type : undefined
+    },
+    sourceSource () {
+      if (!this.rule) return undefined
+      if (this.rule.configuration?.source) {
+        return this.rule.configuration
+      }
+      if (this.rule.actions?.length) {
+        for (const action of this.rule.actions) {
+          if (RuleStatus.isOpaqueModule(action)) {
+            return action.configuration
+          }
+        }
+      }
+      return undefined
     },
     templateTopicLink () {
       if (!this.currentTemplate) return null
