@@ -49,7 +49,7 @@ import ModuleDescriptionSuggestions from '../module-description-suggestions'
 
 export default {
   mixins: [ModuleDescriptionSuggestions],
-  props: ['rule', 'module', 'moduleType', 'moduleTypes', 'createMode', 'isScriptRule', 'languages', 'mode'],
+  props: ['rule', 'module', 'moduleType', 'createMode', 'isScriptRule', 'languages', 'mode'],
   emits: ['newLanguage'],
   components: {
     RuleGeneralSettings
@@ -59,13 +59,13 @@ export default {
       return this.editable || this.module?.label ? this.module.label : this.sugModuleTitle
     },
     sugModuleTitle () {
-      return this.suggestedModuleTitle(this.module)
+      return this.suggestedModuleTitle(this.module, this.moduleType)
     },
     moduleDescription () {
       return this.editable || this.module?.description ? this.module.description : this.sugModuleDescription
     },
     sugModuleDescription () {
-      return this.suggestedModuleDescription(this.module)
+      return this.suggestedModuleDescription(this.module, this.moduleType)
     },
     editable () {
       return this.createMode || (this.rule && this.rule.editable)
