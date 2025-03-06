@@ -186,8 +186,7 @@ export default {
       selectedItems: [],
       showCheckboxes: false,
       eventSource: null,
-      templates: null,
-      ruleTypesAsScript: []
+      templates: null
     }
   },
   computed: {
@@ -243,16 +242,10 @@ export default {
         filter = '&tags=Scene'
       }
 
-      const promises = [this.$oh.api.get('/rest/services/org.openhab.mainui/config'), this.$oh.api.get('/rest/templates'), this.$oh.api.get('/rest/rules?summary=true' + filter)]
+      const promises = [this.$oh.api.get('/rest/templates'), this.$oh.api.get('/rest/rules?summary=true' + filter)]
       Promise.allSettled(promises).then((results) => {
-        const configData = results[0]
-        const templateData = results[1]
-        const ruleData = results[2]
-        if (configData.status === 'fulfilled') {
-          this.$set(this, 'ruleTypesAsScript', configData.value.ruleTypesAsScript ? configData.value.ruleTypesAsScript : [])
-        } else {
-          console.warn('Failed to retrieve MainUI configuration. Status: "' + configData.status + '", Reason: "' + configData.reason + '"')
-        }
+        const templateData = results[0]
+        const ruleData = results[1]
         if (templateData.status === 'fulfilled') {
           this.$set(this, 'templates', templateData.value)
         } else {
