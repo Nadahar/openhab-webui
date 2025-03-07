@@ -31,7 +31,7 @@ module.exports = {
     './src/js/app.js'
   ],
   output: {
-    path: resolvePath('www'),
+    path: resolvePath('../target/www'),
     filename: 'js/app.[contenthash].js',
     publicPath: '/',
     hotUpdateChunkFilename: 'hot/[id].[fullhash].hot-update.js',
@@ -65,7 +65,7 @@ module.exports = {
       }
     },
     static: [
-      path.resolve(__dirname, 'www'),
+      path.resolve(__dirname, '../target/www'),
     ],
     allowedHosts: "all",
     historyApiFallback: true,
@@ -263,15 +263,15 @@ module.exports = {
       patterns: [
         {
           from: resolvePath('src/res'),
-          to: resolvePath('www/res')
+          to: resolvePath('../target/www/res')
         },
         {
           from: resolvePath('src/manifest.json'),
-          to: resolvePath('www/manifest.json')
+          to: resolvePath('../target/www/manifest.json')
         },
         {
           from: resolvePath('src/robots.txt'),
-          to: resolvePath('www/robots.txt')
+          to: resolvePath('../target/www/robots.txt')
         }
       ]
     }),

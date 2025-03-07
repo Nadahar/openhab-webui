@@ -33,6 +33,17 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>${basedir}/web/node_modules</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
 
@@ -52,12 +63,12 @@
           </execution>
 
           <execution>
-            <id>npm ci</id>
+            <id>npm install</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <configuration>
-              <arguments>ci</arguments>
+              <arguments>install --save false</arguments>
             </configuration>
           </execution>
 
@@ -84,7 +95,7 @@
             <configuration>
               <resources>
                 <resource>
-                  <directory>web/www</directory>
+                  <directory>target/www</directory>
                   <targetPath>app</targetPath>
                 </resource>
               </resources>

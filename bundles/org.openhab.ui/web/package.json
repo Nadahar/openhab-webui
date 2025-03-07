@@ -1,6 +1,6 @@
 {
   "name": "openhab",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "description": "openHAB",
   "repository": "https://github.com/openhab/openhab-webui",
   "license": "EPL-2.0",
