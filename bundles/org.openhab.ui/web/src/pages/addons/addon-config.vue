@@ -91,18 +91,24 @@ export default {
       config: null,
       bindingId: null,
       loggerPackages: [],
-      serviceId: null,
-      strippedAddonId: '',
       loadingConfig: true,
       loadingLoggers: true
     }
   },
   computed: {
     type () {
-      return this.addonId.split('-')[0]
+      return this.strippedAddonId.split('-')[0]
     },
     name () {
-      return this.addonId.split('-')[1]
+      return this.strippedAddonId.split('-')[1]
+    },
+    strippedAddonId () {
+      let serviceSeparator = this.addonId.indexOf(':')
+      return serviceSeparator === -1 ? this.addonId : this.addonId.substring(serviceSeparator + 1)
+    },
+    serviceId () {
+      let serviceSeparator = this.addonId.indexOf(':')
+      return serviceSeparator === -1 ? null : this.addonId.substring(0, serviceSeparator)
     }
   },
   watch: {
@@ -171,13 +177,6 @@ export default {
     }
   },
   created () {
-    let serviceSeparator = this.addonId.indexOf(':')
-    if (serviceSeparator === -1) {
-      this.strippedAddonId = this.addonId
-    } else {
-      this.strippedAddonId = this.addonId.substring(serviceSeparator + 1)
-      this.serviceId = this.addonId.substring(0, serviceSeparator)
-    }
     let requestUri = '/rest/addons/' + this.strippedAddonId + (this.serviceId ? '?serviceId=' + this.serviceId : '')
 
     this.$oh.api.get(requestUri).then(data => {
