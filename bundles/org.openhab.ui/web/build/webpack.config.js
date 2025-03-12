@@ -19,6 +19,8 @@ function resolvePath(dir) {
 const env = process.env.NODE_ENV || 'development'
 const target = process.env.TARGET || 'web'
 const buildSourceMaps = process.env.SOURCE_MAPS || false
+const maven = process.env.MAVEN || false
+const basePath = maven ? '../target/classes/app' : 'www'
 
 const apiBaseUrl = process.env.OH_APIBASE || 'http://localhost:8080'
 
@@ -31,7 +33,7 @@ module.exports = {
     './src/js/app.js'
   ],
   output: {
-    path: resolvePath('../target/www'),
+    path: resolvePath(basePath),
     filename: 'js/app.[contenthash].js',
     publicPath: '/',
     hotUpdateChunkFilename: 'hot/[id].[fullhash].hot-update.js',
@@ -65,7 +67,7 @@ module.exports = {
       }
     },
     static: [
-      path.resolve(__dirname, '../target/www'),
+      path.resolve(__dirname, basePath),
     ],
     allowedHosts: "all",
     historyApiFallback: true,
@@ -263,15 +265,15 @@ module.exports = {
       patterns: [
         {
           from: resolvePath('src/res'),
-          to: resolvePath('../target/www/res')
+          to: resolvePath(basePath + '/res')
         },
         {
           from: resolvePath('src/manifest.json'),
-          to: resolvePath('../target/www/manifest.json')
+          to: resolvePath(basePath + '/manifest.json')
         },
         {
           from: resolvePath('src/robots.txt'),
-          to: resolvePath('../target/www/robots.txt')
+          to: resolvePath(basePath + '/robots.txt')
         }
       ]
     }),

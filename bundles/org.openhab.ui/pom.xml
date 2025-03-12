@@ -67,38 +67,20 @@
             <goals>
               <goal>npm</goal>
             </goals>
+            <phase>generate-resources</phase>
             <configuration>
               <arguments>install --save false</arguments>
             </configuration>
           </execution>
 
           <execution>
-            <id>npm run build-prod</id>
+            <id>npm run build-mvn</id>
             <goals>
               <goal>npm</goal>
             </goals>
+            <phase>prepare-package</phase>
             <configuration>
-              <arguments>run build-prod ${project.version}</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>target/www</directory>
-                  <targetPath>app</targetPath>
-                </resource>
-              </resources>
+              <arguments>run build-mvn ${project.version}</arguments>
             </configuration>
           </execution>
         </executions>

@@ -10,12 +10,13 @@ const config = require('./webpack.config.js');
 
 const env = process.env.NODE_ENV || 'development';
 const target = process.env.TARGET || 'web';
+const maven = process.env.MAVEN || false;
 
 const spinner = ora(env === 'production' ? chalk.cyan('Building for production...') : chalk.cyan('Building development version...'));
 spinner.start();
 
 exec(`npm run generate-build-info ${process.argv[2]}`).then(() => {
-  return rm('./www/')
+  return maven ? rm('../target/classes/app') : rm('./www/')
 }).then(() => {
   webpack(config, (err, stats) => {
     if (err) throw err;
