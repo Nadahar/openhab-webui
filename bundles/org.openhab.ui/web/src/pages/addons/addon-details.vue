@@ -243,7 +243,7 @@ export default {
     },
     showInstallActions () {
       let splitted = this.addon.uid.split(':')
-      return splitted.length < 2 || splitted[0] !== 'eclipse'
+      return splitted.length < 2 || (splitted[0] !== 'eclipse' && splitted[0] !== 'jar')
     }
   },
   methods: {
