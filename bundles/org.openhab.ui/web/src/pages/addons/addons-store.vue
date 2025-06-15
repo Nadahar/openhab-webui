@@ -114,6 +114,12 @@
           :title="'Community Marketplace'"
           :subtitle="'Bindings independently released by the community'" />
         <addons-section
+          v-if="eclipseAddons"
+          @addonButtonClick="addonButtonClick"
+          :addons="eclipseAddons.filter((a) => a.type === 'binding')"
+          :title="'Eclipse'"
+          :subtitle="'Bindings provided via Eclipse'" />
+        <addons-section
           v-if="otherAddons && otherAddons.length"
           @addonButtonClick="addonButtonClick"
           :addons="otherAddons.filter((a) => a.type === 'binding')"
@@ -300,10 +306,13 @@ export default {
       return this.allAddons.filter((a) => !this.suggestedAddons.includes(a)).filter((a) => this.isInFilter(a))
     },
     officialAddons () {
-      return Object.keys(this.addons).filter((k) => k === 'eclipse' || k === 'karaf').flatMap((k) => this.addons[k]).filter((a) => this.isInFilter(a)).filter((a) => !this.suggestedAddons.includes(a))
+      return Object.keys(this.addons).filter((k) => k === 'karaf').flatMap((k) => this.addons[k]).filter((a) => this.isInFilter(a)).filter((a) => !this.suggestedAddons.includes(a))
     },
     marketplaceAddons () {
       return this.addons.marketplace.filter((a) => !this.suggestedAddons.includes(a)).filter((a) => this.isInFilter(a))
+    },
+    eclipseAddons () {
+      return Object.keys(this.addons).filter((k) => k === 'eclipse').flatMap((k) => this.addons[k]).filter((a) => this.isInFilter(a)).filter((a) => !this.suggestedAddons.includes(a))
     },
     otherAddons () {
       return Object.keys(this.addons).filter((k) => k !== 'eclipse' && k !== 'karaf' && k !== 'marketplace').flatMap((k) => this.addons[k]).filter((a) => this.isInFilter(a)).filter((a) => !this.suggestedAddons.includes(a))
