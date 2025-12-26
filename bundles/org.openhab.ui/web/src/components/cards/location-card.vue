@@ -21,7 +21,7 @@
       </div>
     </template>
     <div class="card-content-padding">
-      <f7-segmented round tag="p" v-if="element.equipment.length > 0 && element.properties.length > 0">
+      <f7-segmented round tag="p" v-if="element.equipment?.length > 0 && element.properties?.length > 0">
         <f7-button round outline :active="activeTab === 'equipment'" :color="color" @click="activeTab = 'equipment'" :text="$t('home.equipment.tab')" />
         <f7-button round outline :active="activeTab === 'properties'" :color="color" @click="activeTab = 'properties'" :text="$t('home.properties.tab')" />
       </f7-segmented>
@@ -63,7 +63,7 @@ export default {
   },
   data () {
     return {
-      activeTab: (this.element.equipment.length === 0 && this.element.properties.length > 0) ? 'properties' : 'equipment'
+      activeTab: ((!this.element.equipment || this.element.equipment.length === 0) && this.element.properties?.length > 0) ? 'properties' : 'equipment'
     }
   },
   computed: {

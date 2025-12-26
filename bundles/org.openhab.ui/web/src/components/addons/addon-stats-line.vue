@@ -1,5 +1,5 @@
 <template>
-  <span v-if="addon.properties" class="addon-stats-line">
+  <span v-if="addon.properties?.length > 0" class="addon-stats-line">
     <span v-if="addon.properties.like_count >= 0">
       <f7-icon f7="heart_fill" :size="iconSize" />
       {{ addon.properties.like_count }}

@@ -8,7 +8,7 @@
       {{ addon.author }}
       <f7-icon v-if="addon.verifiedAuthor" size="15" :color="$f7.data.themeOptions.dark === 'dark' ? 'white' : 'blue'" f7="checkmark_seal_fill" style="margin-top: -3px" />
     </div>
-    <div v-else-if="addon.properties && addon.properties.views" slot="subtitle">
+    <div v-else-if="addon.properties?.views" slot="subtitle">
       <addon-stats-line :addon="addon" :iconSize="15" />
     </div>
     <addon-logo slot="media" class="logo-square" :lazy="true" :addon="addon" size="64" />

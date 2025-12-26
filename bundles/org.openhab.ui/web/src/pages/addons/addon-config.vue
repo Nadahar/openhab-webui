@@ -26,7 +26,7 @@
           :configuration="config" />
       </f7-col>
     </f7-block>
-    <f7-block form v-if="loggerPackages.length > 0" class="block-narrow">
+    <f7-block form v-if="loggerPackages?.length > 0" class="block-narrow">
       <f7-col>
         <f7-block-title medium>
           Add-on log settings

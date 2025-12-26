@@ -138,7 +138,7 @@ export default {
         format = Formats.eclipse
       } else if (source === 'karaf' || source === 'jar') {
         format = Formats.karaf
-      } else if (Object.keys(this.addon.properties).length > 0) {
+      } else if (this.addon?.properties && Object.keys(this.addon.properties).length > 0) {
         for (const property in this.addon.properties) {
           if (Formats[property]) format = Formats[property]
         }
