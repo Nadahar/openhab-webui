@@ -57,10 +57,10 @@ export const useThingEditStore = defineStore('thingEditStore', () => {
 
   // methods
   async function loadThingActions(thingUID: string): Promise<void> {
+    thingActions.value = []
     try {
       const data = await api.getAvailableActionsForThing({ thingUID })
       if (!data) {
-        thingActions.value = []
         return
       }
       thingActions.value = data
@@ -72,41 +72,44 @@ export const useThingEditStore = defineStore('thingEditStore', () => {
         console.log('No actions available for this Thing')
         return
       }
-      console.error('Error loading thing actions: ' + e)
+      console.error(`Error loading thing actions: ${e}`)
       throw e
     }
   }
 
   async function loadConfigDescriptions(thingUID: string): Promise<void> {
     try {
+      configDescriptions.value = null
       const data = await api.getConfigDescriptionByUri({ uri: 'thing:' + thingUID })
-      if (!data) {
-        configDescriptions.value = null
-        return
+      if (data) {
+        configDescriptions.value = data
       }
-      configDescriptions.value = data
     } catch (e: any) {
-      console.debug('No specific config description available for this thing, using config description from thing type instead.')
-      configDescriptions.value = {
-        parameterGroups: thingType.value.parameterGroups,
-        parameters: thingType.value.configParameters
+      console.error(`Error loading config descriptions for thing: ${e}`)
+    } finally {
+      if (!configDescriptions.value || !configDescriptions.value.parameters) {
+        console.debug('No specific config description available for this thing, using config description from thing type instead.')
+        configDescriptions.value = {
+          parameterGroups: thingType.value.parameterGroups,
+          parameters: thingType.value.configParameters
+        }
       }
     }
   }
 
   async function loadFirmwares(thingUID: string) {
-    // force parse as JSON to ensure hey-api parses 204 as empty object
+    firmwares.value = null
     api
       .getThingFirmwareStatus({ thingUID })
       .then((data) => {
-        if (data && Object.keys(data).length === 0) {
+        if (!data || Object.keys(data).length === 0) {
           console.debug(`Firmware info not available for Thing ${thingUID}`)
+          return
         }
-        firmwares.value = data!
+        firmwares.value = data
       })
-      .catch((err) => {
-        firmwares.value = null
-        console.debug(`Firmware info not available for Thing ${thingUID}: ` + err.message)
+      .catch((e) => {
+        console.error(`Error loading firmwares for Thing ${thingUID}: ${e}`)
       })
   }
 
