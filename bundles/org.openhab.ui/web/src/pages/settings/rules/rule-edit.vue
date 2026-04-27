@@ -269,7 +269,7 @@
           </f7-col>
         </f7-block>
       </f7-tab>
-      <f7-tab id="code" :tab-active="currentTab === 'code'">
+      <!-- <f7-tab id="code" :tab-active="currentTab === 'code'">
         <f7-icon
           v-if="!createMode && !isEditable"
           f7="lock"
@@ -285,8 +285,23 @@
           :value="ruleYaml"
           :readOnly="!isEditable"
           @input="onEditorInput"
-          @save="save()" />
+          @save="save()" /> -->
         <!-- <pre class="yaml-message padding-horizontal" :class="[yamlError === 'OK' ? 'text-color-green' : 'text-color-red']">{{yamlError}}</pre> -->
+      <!--/f7-tab-->
+      <f7-tab v-if="rule" id="code" :tab-active="currentTab === 'code' ? true : null">
+        <!-- v-if="ready" ensures that thingType and channelTypes are populated TODO: Fix this -->
+        <!-- :hint-context="{ thingType: thingType, channelTypes: channelTypes }" -->
+        <code-editor
+          v-if="ready"
+          ref="codeEditor"
+          object-type="rules"
+          :object="rule"
+          :object-id="rule.uid"
+          :read-only="!isEditable"
+          :read-only-msg="notEditableMsg"
+          @save="save()"
+          @parsed="updateRule"
+          @changed="onCodeChanged" />
       </f7-tab>
       <f7-tab v-if="ready && hasSource" id="source" :tab-active="currentTab === 'source'">
         <f7-icon
@@ -364,7 +379,8 @@ export default {
   components: {
     RuleGeneralSettings,
     ConfigSheet,
-    editor: defineAsyncComponent(() => import(/* webpackChunkName: "script-editor" */ '@/components/config/controls/script-editor.vue'))
+    editor: defineAsyncComponent(() => import(/* webpackChunkName: "script-editor" */ '@/components/config/controls/script-editor.vue')), // TODO: (Nad) Remove?
+    CodeEditor: defineAsyncComponent(() => import(/* webpackChunkName: "code-editor" */ '@/components/config/controls/code-editor.vue'))
   },
   props: {
     ruleId: String,
@@ -409,7 +425,10 @@ export default {
       scriptCode: '',
       cronExpression: null,
       templates: null,
-      currentTemplate: null
+      currentTemplate: null,
+      ruleDirty: false,
+      codeDirty: false,
+      notEditableMsg: 'This rule is read-only.', // TODO: (Nad) rule/script/scene
     }
   },
   watch: {
@@ -423,11 +442,17 @@ export default {
           delete ruleClone.status
           delete this.savedRule.status
 
-          this.dirty = !fastDeepEqual(ruleClone, this.savedRule)
+          this.ruleDirty = !fastDeepEqual(ruleClone, this.savedRule)
         }
       },
       deep: true
-    }
+    },
+    ruleDirty: function () {
+      this.dirty = this.ruleDirty || this.codeDirty
+    },
+    codeDirty: function () {
+      this.dirty = this.ruleDirty || this.codeDirty
+    },
   },
   methods: {
     load() {
@@ -533,6 +558,65 @@ export default {
         }
       })
     },
+    switchTab(newTab) {
+      if (this.currentTab === newTab) return
+
+      // We can't prevent the tab switch here. Instead, we'll switch back if parsing fails
+      this.currentTab = newTab
+
+      if (newTab === 'code') {
+        this.$refs.codeEditor.generateCode()
+      } else if (this.codeDirty) {
+        this.$refs.codeEditor.parseCode(
+          () => {
+            this.codeDirty = false
+          },
+          () => {
+            this.currentTab = 'code'
+            f7.tab.show('#code')
+          }
+        )
+      }
+    },
+    onCodeChanged(codeDirty) {
+      this.codeDirty = codeDirty
+    },
+    updateRule(updatedRule) {
+      try {
+        if (updatedRule.UID !== this.rule.UID) throw new Error('Changing the rule UID is not supported')
+        if (updatedRule.label) this.rule.label = updatedRule.label
+        if (updatedRule.description) this.rule.description = updatedRule.description
+        // TODO: (Nad) Handle other general properties if needed (e.g. tags, visibility)
+
+        if (updatedRule.configuration && JSON.stringify(this.rule.configuration) !== JSON.stringify(updatedRule.configuration)) {
+          this.rule.configuration = updatedRule.configuration
+        }
+
+        return true
+      } catch (e) {
+        f7.dialog.alert(e).open()
+        return false
+      }
+    },
+    // save(saveThing) {
+    //   if (!this.ready || !this.editable) return
+
+    //   if (this.currentTab === 'code' && this.codeDirty) {
+    //     this.$refs.codeEditor.parseCode(() => {
+    //       this.codeDirty = false
+    //       useThingEditStore().save(saveThing)
+    //       this.$refs.codeEditor.generateCode()
+    //     })
+    //     return
+    //   }
+
+    //   if (this.$refs.thingConfiguration && !this.$refs.thingConfiguration.isValid()) {
+    //     f7.dialog.alert('Please review the configuration and correct validation errors')
+    //     return
+    //   }
+
+    //   useThingEditStore().save(saveThing)
+    // },
     save(noToast) {
       if (!this.isEditable) return Promise.reject()
       if (this.currentTab === 'code') {
@@ -654,7 +738,7 @@ export default {
     deleteRule() {
       f7.dialog.confirm(`Are you sure you want to delete ${this.rule.name}?`, 'Delete Rule', () => {
         this.$oh.api.delete('/rest/rules/' + this.rule.uid).then(() => {
-          this.dirty = false
+          this.dirty = this.ruleDirty = this.codeDirty = false
           this.f7router.back('/settings/rules/', { force: true })
         })
       })
