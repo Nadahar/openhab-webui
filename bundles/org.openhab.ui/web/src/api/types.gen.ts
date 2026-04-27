@@ -137,11 +137,11 @@ export type RuleStatusInfo = {
 };
 
 export type Module = {
-    typeUID: string;
-    description: string;
-    label: string;
-    configuration: Configuration;
     id: string;
+    configuration: Configuration;
+    description: string;
+    typeUID: string;
+    label: string;
 };
 
 export type Configuration = {
@@ -158,11 +158,10 @@ export type RuleExecution = {
 };
 
 export type Template = {
-    tags: Array<string>;
-    uid: string;
-    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
     description: string;
+    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
     label: string;
+    uid: string;
 };
 
 export type Input = {
@@ -368,6 +367,138 @@ export type DiscoveryResult = {
     thingTypeUID?: string;
 };
 
+export type SerializabilityResultString = {
+    uid: string;
+    ok: boolean;
+    failureReason: string;
+};
+
+export type SerializabilityResults = {
+    results: Array<SerializabilityResultString>;
+};
+
+export type JsonArray = {
+    asString: string;
+    empty: boolean;
+    asDouble: number;
+    asInt: number;
+    asLong: number;
+    asBoolean: boolean;
+    asFloat: number;
+    asShort: number;
+    asByte: string;
+    asNumber: number;
+    asBigDecimal: number;
+    asBigInteger: number;
+    asCharacter: string;
+    jsonNull: boolean;
+    jsonObject: boolean;
+    asJsonNull: JsonNull;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    asJsonArray: JsonArray;
+    jsonPrimitive: boolean;
+    asJsonPrimitive: JsonPrimitive;
+};
+
+export type JsonElement = {
+    asString: string;
+    asDouble: number;
+    asInt: number;
+    asLong: number;
+    asBoolean: boolean;
+    asFloat: number;
+    asShort: number;
+    asByte: string;
+    jsonNull: boolean;
+    jsonObject: boolean;
+    asJsonNull: JsonNull;
+    asNumber: number;
+    asBigDecimal: number;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    asJsonArray: JsonArray;
+    asBigInteger: number;
+    asCharacter: string;
+    jsonPrimitive: boolean;
+    asJsonPrimitive: JsonPrimitive;
+};
+
+export type JsonNull = {
+    asString: string;
+    asDouble: number;
+    asInt: number;
+    asLong: number;
+    asBoolean: boolean;
+    asFloat: number;
+    asShort: number;
+    asByte: string;
+    jsonNull: boolean;
+    jsonObject: boolean;
+    asJsonNull: JsonNull;
+    asNumber: number;
+    asBigDecimal: number;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    asJsonArray: JsonArray;
+    asBigInteger: number;
+    asCharacter: string;
+    jsonPrimitive: boolean;
+    asJsonPrimitive: JsonPrimitive;
+};
+
+export type JsonObject = {
+    empty: boolean;
+    asString: string;
+    asDouble: number;
+    asInt: number;
+    asLong: number;
+    asBoolean: boolean;
+    asFloat: number;
+    asShort: number;
+    asByte: string;
+    jsonNull: boolean;
+    jsonObject: boolean;
+    asJsonNull: JsonNull;
+    asNumber: number;
+    asBigDecimal: number;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    asJsonArray: JsonArray;
+    asBigInteger: number;
+    asCharacter: string;
+    jsonPrimitive: boolean;
+    asJsonPrimitive: JsonPrimitive;
+};
+
+export type JsonPrimitive = {
+    asString: string;
+    asDouble: number;
+    asInt: number;
+    asLong: number;
+    asBoolean: boolean;
+    asFloat: number;
+    asShort: number;
+    boolean: boolean;
+    number: boolean;
+    asByte: string;
+    string: boolean;
+    asNumber: number;
+    asBigDecimal: number;
+    asBigInteger: number;
+    asCharacter: string;
+    jsonNull: boolean;
+    jsonObject: boolean;
+    asJsonNull: JsonNull;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    asJsonArray: JsonArray;
+    jsonPrimitive: boolean;
+    asJsonPrimitive: JsonPrimitive;
+};
+
+export type StringList = Array<string>;
+
 export type Channel = {
     uid: string;
     id: string;
@@ -392,6 +523,8 @@ export type FileFormat = {
     items: Array<FileFormatItem>;
     things: Array<Thing>;
     sitemaps: Array<SitemapDefinition>;
+    rules: Array<Rule>;
+    ruleTemplates: Array<RuleTemplateDto>;
 };
 
 export type FileFormatChannelLink = {
@@ -432,6 +565,26 @@ export type Metadata = {
         };
     };
     editable: boolean;
+};
+
+export type RuleTemplateDto = {
+    label: string;
+    uid: string;
+    tags: Array<string>;
+    description: string;
+    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
+    configDescriptions: Array<ConfigDescriptionParameter>;
+    triggers: Array<Trigger>;
+    conditions: Array<Condition>;
+    actions: Array<Action>;
+};
+
+export type SitemapButtonDefinition = {
+    row: number;
+    column: number;
+    command: string;
+    label: string;
+    icon: string;
 };
 
 export type SitemapCondition = {
@@ -518,6 +671,8 @@ export type ExtendedFileFormat = {
     items: Array<FileFormatItem>;
     things: Array<Thing>;
     sitemaps: Array<SitemapDefinition>;
+    rules: Array<Rule>;
+    ruleTemplates: Array<RuleTemplateDto>;
     warnings: Array<string>;
 };
 
@@ -2788,6 +2943,41 @@ export type RemoveIgnoreFlagOnInboxItemResponses = {
     200: unknown;
 };
 
+export type CanSerializeRulesData = {
+    /**
+     * JSON rule data
+     */
+    body?: StringList | FileFormat;
+    path?: never;
+    query?: {
+        /**
+         * Target format
+         */
+        targetFormat?: 'application/vnd.openhab.dsl.rule' | 'application/yaml';
+    };
+    url: '/file-format/rules/check';
+};
+
+export type CanSerializeRulesErrors = {
+    /**
+     * No rule specified.
+     */
+    400: unknown;
+    /**
+     * One or more rules not found in the registry.
+     */
+    404: unknown;
+};
+
+export type CanSerializeRulesResponses = {
+    /**
+     * OK
+     */
+    200: SerializabilityResults;
+};
+
+export type CanSerializeRulesResponse = CanSerializeRulesResponses[keyof CanSerializeRulesResponses];
+
 export type CreateData = {
     /**
      * JSON data
@@ -2807,6 +2997,10 @@ export type CreateData = {
          * hide the channel links and metadata for items
          */
         hideChannelLinksAndMetadata?: boolean;
+        /**
+         * Decides what to include in serialized rules and rule templates
+         */
+        ruleSerializationOption?: 'Normal' | 'Include all' | 'Stub only' | 'Strip template';
     };
     url: '/file-format/create';
 };
@@ -2820,6 +3014,10 @@ export type CreateErrors = {
      * Unsupported media type.
      */
     415: unknown;
+    /**
+     * Unable to serialize entity.
+     */
+    422: unknown;
 };
 
 export type CreateResponses = {
@@ -2865,6 +3063,84 @@ export type CreateFileFormatForItemsResponses = {
 };
 
 export type CreateFileFormatForItemsResponse = CreateFileFormatForItemsResponses[keyof CreateFileFormatForItemsResponses];
+
+export type CreateFileFormatForRuleTemplatesData = {
+    /**
+     * Array of rule template UIDs. If empty or omitted, return all rule templates.
+     */
+    body?: Array<string>;
+    path?: never;
+    query?: {
+        /**
+         * Decides what to include in serialized rule templates
+         */
+        serializationOption?: 'Normal' | 'Include all';
+    };
+    url: '/file-format/ruletemplates';
+};
+
+export type CreateFileFormatForRuleTemplatesErrors = {
+    /**
+     * One or more rule templates not found in the registry.
+     */
+    404: unknown;
+    /**
+     * Unsupported media type.
+     */
+    415: unknown;
+    /**
+     * Unable to serialize rule template.
+     */
+    422: unknown;
+};
+
+export type CreateFileFormatForRuleTemplatesResponses = {
+    /**
+     * OK
+     */
+    200: string;
+};
+
+export type CreateFileFormatForRuleTemplatesResponse = CreateFileFormatForRuleTemplatesResponses[keyof CreateFileFormatForRuleTemplatesResponses];
+
+export type CreateFileFormatForRulesData = {
+    /**
+     * Array of rule UIDs. If empty or omitted, return all rules.
+     */
+    body?: Array<string>;
+    path?: never;
+    query?: {
+        /**
+         * Decides what to include in serialized rules
+         */
+        serializationOption?: 'Normal' | 'Include all' | 'Stub only' | 'Strip template';
+    };
+    url: '/file-format/rules';
+};
+
+export type CreateFileFormatForRulesErrors = {
+    /**
+     * One or more rules not found in the registry.
+     */
+    404: unknown;
+    /**
+     * Unsupported media type.
+     */
+    415: unknown;
+    /**
+     * Unable to serialize rule.
+     */
+    422: unknown;
+};
+
+export type CreateFileFormatForRulesResponses = {
+    /**
+     * OK
+     */
+    200: string;
+};
+
+export type CreateFileFormatForRulesResponse = CreateFileFormatForRulesResponses[keyof CreateFileFormatForRulesResponses];
 
 export type CreateFileFormatForSitemapsData = {
     /**
