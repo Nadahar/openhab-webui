@@ -103,11 +103,12 @@ export default {
   },
   props: {
     object: Object,
-    objectType: String, // the type of the object, e.g. 'items', 'things' which corresponds to the yaml element name.
+    objectType: String, // the type of the object, e.g. 'items', 'things', 'rules' which corresponds to the yaml element name.
     objectId: String,
     hintContext: Object,
     readOnly: Boolean,
-    readOnlyMsg: String
+    readOnlyMsg: String,
+    validMediaTypes: Array // optional list of media types to show, if not provided, all media types for the object type will be shown
   },
   // @parsed  event is emitted when the code has been parsed back into an object
   //          as a result of calling the parseCode() method
@@ -127,10 +128,23 @@ export default {
   },
   computed: {
     editorMode() {
-      return this.mediaTypes[this.uiOptionsStore.codeEditorType]
+      const mode = this.mediaTypes[this.uiOptionsStore.codeEditorType]
+      if (mode) return mode
+      const keys = Object.keys(this.mediaTypes || {})
+      if (keys.length > 0) return this.mediaTypes[keys[0]]
+      return undefined
     },
     mediaTypes() {
-      return SupportedMediaTypes[this.objectType] || DefaultMediaTypes
+      let result = SupportedMediaTypes[this.objectType] || DefaultMediaTypes
+      if (!this.validMediaTypes || this.validMediaTypes.length === 0) {
+        return result
+      }
+      result = Object.fromEntries(
+        Object.entries(result).filter(([key, value]) => {
+          return this.validMediaTypes.includes(value)
+        })
+      )
+      return result
     },
     ...mapStores(useUIOptionsStore)
   },
@@ -152,7 +166,7 @@ export default {
       codeType ||= this.uiOptionsStore.codeEditorType
       const sourceMediaType = MediaType.JSON
       let targetMediaType = this.mediaTypes[codeType]
-      targetMediaType = targetMediaType.split('+')[0] // remove the +thing or +item suffix, if present
+      targetMediaType = targetMediaType.split('+')[0] // remove the +thing, +item or +rule suffix, if present
       const payload = {}
       payload[this.objectType] = [this.object]
       this.$oh.api
@@ -182,7 +196,7 @@ export default {
      */
     parseCode(onSuccessCallback, onFailureCallback) {
       let sourceMediaType = this.mediaTypes[this.uiOptionsStore.codeEditorType]
-      sourceMediaType = sourceMediaType.split('+')[0] // remove the +thing or +item suffix, if present
+      sourceMediaType = sourceMediaType.split('+')[0] // remove the +thing, +item or +rule suffix, if present
       const targetMediaType = MediaType.JSON
       this.$oh.api
         .request({
