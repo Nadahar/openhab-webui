@@ -300,6 +300,7 @@
           :object-id="rule.uid"
           :read-only="!isEditable"
           :read-only-msg="notEditableMsg"
+          :valid-media-types="['application/yaml+rule', 'application/vnd.openhab.dsl.rule']"
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged" />
@@ -375,6 +376,7 @@ import FileDefinition from '@/pages/settings/file-definition-mixin'
 import { useUIOptionsStore } from '@/js/stores/useUIOptionsStore'
 import { showToast } from '@/js/dialog-promises'
 import { useDirty } from '@/pages/useDirty'
+import { canSerializeRules } from '@/api'
 //import { useTabs } from '@/pages/useTabs'
 
 const UID_REGEX = new RegExp('^' + RULE_UID_PATTERN + '$')
@@ -435,7 +437,10 @@ export default {
       ruleDirty: false,
       codeDirty: false,
       notEditableMsg: 'This rule is read-only.', // TODO: (Nad) rule/script/scene
-      uidPattern: RULE_UID_PATTERN
+      uidPattern: RULE_UID_PATTERN,
+
+      canYAML: false,
+      canDSL: false
     }
   },
   watch: {
@@ -474,6 +479,17 @@ export default {
           if (!this.createMode && !this.stubMode && this.hasOpaqueModule && this.hasSource) {
             this.switchTab('source')
           }
+        })
+      }
+
+      const checkEditorTypes = () => {
+        canSerializeRules({
+          targetFormat: 'application/vnd.openhab.dsl.rule',
+          body: [this.ruleId]
+        }).then((canDSL) => {
+          const result = canDSL.results.filter((r) => r.uid === this.ruleId)
+          this.canDSL = result.length > 0 && result[0].ok
+          console.log('Can serialize rules to DSL:', this.canDSL)
         })
       }
 
@@ -554,10 +570,12 @@ export default {
             if (data2.templateUID) {
               this.$oh.api.get('/rest/templates').then((templateData) => {
                 this.templates = templateData
+                checkEditorTypes()
                 if (!this.eventSource) this.startEventSource()
                 loadingFinished()
               })
             } else {
+              checkEditorTypes()
               if (!this.eventSource) this.startEventSource()
               loadingFinished()
             }
@@ -689,7 +707,7 @@ export default {
         })
     },
     duplicateRule() {
-      let ruleClone = cloneDeep(this.rule)
+      let ruleClone = cloneDeep(this.rule) // TODO: (Nad) Remove embedded source, and check for other cleanup
       ruleClone.name = (ruleClone.name || '') + ' copy'
       ruleClone.editable = true
       this.f7router.navigate(
