@@ -352,16 +352,17 @@ import { RULE_UID_PATTERN } from '@/js/openhab/uid.ts'
 import ConfigSheet from '@/components/config/config-sheet.vue'
 import RuleGeneralSettings from '@/components/rule/rule-general-settings.vue'
 import AUTOMATION_LANGUAGES from '@/assets/automation-languages'
+import FileDefinition from '@/pages/settings/file-definition-mixin'
 
 import { useUIOptionsStore } from '@/js/stores/useUIOptionsStore'
 import { showToast } from '@/js/dialog-promises'
 import { useDirty } from '@/pages/useDirty'
-import { useTabs } from '@/pages/useTabs'
+//import { useTabs } from '@/pages/useTabs'
 
 const UID_REGEX = new RegExp('^' + RULE_UID_PATTERN + '$')
 
 export default {
-  mixins: [RuleMixin, ModuleDescriptionSuggestions, RuleStatus],
+  mixins: [RuleMixin, ModuleDescriptionSuggestions, RuleStatus, FileDefinition],
   components: {
     RuleGeneralSettings,
     ConfigSheet,
@@ -379,8 +380,8 @@ export default {
   },
   setup() {
     const { dirty, dirtyIndicator } = useDirty('rule-edit-page')
-    const { currentTab, switchTab } = useTabs('design')
-    return { theme, dirty, dirtyIndicator, currentTab, switchTab }
+//    const { currentTab/*, switchTab*/ } = useTabs('design') // TODO:
+    return { theme, dirty, dirtyIndicator/*, currentTab, switchTab*/ }
   },
   data() {
     return {
@@ -406,6 +407,7 @@ export default {
       currentModule: null,
       currentModuleConfig: {},
 
+      currentTab: 'design',
       codeEditorOpened: false,
       cronPopupOpened: false,
       scriptCode: '',
@@ -568,16 +570,23 @@ export default {
     onCodeChanged(codeDirty) {
       this.codeDirty = codeDirty
     },
-    updateRule(updatedRule) {
+    updateRule(updatedRule) { //TODO: (Nad) Figure out different detail levels and YAML/DSL
       try {
-        if (updatedRule.UID !== this.rule.UID) throw new Error('Changing the rule UID is not supported')
-        if (updatedRule.label) this.rule.label = updatedRule.label
-        if (updatedRule.description) this.rule.description = updatedRule.description
-        // TODO: (Nad) Handle other general properties if needed (e.g. tags, visibility)
-
-        if (updatedRule.configuration && JSON.stringify(this.rule.configuration) !== JSON.stringify(updatedRule.configuration)) {
-          this.rule.configuration = updatedRule.configuration
+        if (this.rule.UID && updatedRule.UID !== this.rule.UID) throw new Error('Changing the rule UID is not supported')
+        if (updatedRule.templateUID !== this.rule.templateUID) {
+          this.rule.templateUID = updatedRule.templateUID
+          // if the template is changed, the templateState becomes irrelevant
+          delete this.rule.templateState
         }
+        if (updatedRule.name !== this.rule.name) this.rule.name = updatedRule.name
+        if (!fastDeepEqual(updatedRule.tags, this.rule.tags)) this.rule.tags = updatedRule.tags
+        if (updatedRule.description !== this.rule.description) this.rule.description = updatedRule.description
+        if (updatedRule.visibility !== this.rule.visibility) this.rule.visibility = updatedRule.visibility
+        if (!fastDeepEqual(updatedRule.configuration, this.rule.configuration)) this.rule.configuration = updatedRule.configuration
+        if (!fastDeepEqual(updatedRule.configDescriptions, this.rule.configDescriptions)) this.rule.configDescriptions = updatedRule.configDescriptions
+        if (!fastDeepEqual(updatedRule.conditions, this.rule.conditions)) this.rule.conditions = updatedRule.conditions
+        if (!fastDeepEqual(updatedRule.actions, this.rule.actions)) this.rule.actions = updatedRule.actions
+        if (!fastDeepEqual(updatedRule.triggers, this.rule.triggers)) this.rule.triggers = updatedRule.triggers
 
         return true
       } catch (e) {
@@ -607,7 +616,7 @@ export default {
     save(noToast) {
       if (!this.isEditable) return Promise.reject()
       if (this.currentTab === 'code') {
-        if (!this.fromYaml()) {
+        if (!this.fromYaml()) { // TODO: (Nad) Fix
           return Promise.reject()
         }
       }
