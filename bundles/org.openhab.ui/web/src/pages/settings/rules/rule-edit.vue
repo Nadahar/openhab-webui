@@ -18,8 +18,8 @@
         Design
       </f7-link>
       <f7-link
-        v-if="!(hasSource && hasOpaqueModule)"
-        @click="switchTab('code', toYaml)"
+        v-if="hasCode"
+        @click="switchTab('code')"
         :tab-link-active="currentTab === 'code' ? true : null"
         tab-link="#code">
         Code
@@ -281,7 +281,7 @@
           @save="save()" /> -->
         <!-- <pre class="yaml-message padding-horizontal" :class="[yamlError === 'OK' ? 'text-color-green' : 'text-color-red']">{{yamlError}}</pre> -->
       <!--/f7-tab-->
-      <f7-tab v-if="rule" id="code" :tab-active="currentTab === 'code' ? true : null">
+      <f7-tab v-if="ready && hasCode && rule" id="code" :tab-active="currentTab === 'code' ? true : null">
         <!-- v-if="ready" ensures that thingType and channelTypes are populated TODO: Fix this -->
         <!-- :hint-context="{ thingType: thingType, channelTypes: channelTypes }" -->
         <code-editor
@@ -292,7 +292,8 @@
           :object-id="rule.uid"
           :read-only="!isEditable"
           :read-only-msg="notEditableMsg"
-          :valid-media-types="['application/yaml+rule', 'application/vnd.openhab.dsl.rule']"
+          :valid-media-types="validMediaTypes"
+          :opt-show-all-media-types="['application/yaml+rule']"
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged" />
@@ -359,7 +360,6 @@ import { useUIOptionsStore } from '@/js/stores/useUIOptionsStore'
 import { showToast } from '@/js/dialog-promises'
 import { useDirty } from '@/pages/useDirty'
 import { canSerializeRules } from '@/api'
-//import { useTabs } from '@/pages/useTabs'
 
 const UID_REGEX = new RegExp('^' + RULE_UID_PATTERN + '$')
 
@@ -382,8 +382,7 @@ export default {
   },
   setup() {
     const { dirty, dirtyIndicator } = useDirty('rule-edit-page')
-//    const { currentTab/*, switchTab*/ } = useTabs('design') // TODO:
-    return { theme, dirty, dirtyIndicator/*, currentTab, switchTab*/ }
+    return { theme, dirty, dirtyIndicator }
   },
   data() {
     return {
@@ -464,15 +463,33 @@ export default {
         })
       }
 
-      const checkEditorTypes = () => {
-        canSerializeRules({
-          targetFormat: 'application/vnd.openhab.dsl.rule',
-          body: [this.ruleId]
-        }).then((canDSL) => {
-          const result = canDSL.results.filter((r) => r.uid === this.ruleId)
-          this.canDSL = result.length > 0 && result[0].ok
-          console.log('Can serialize rules to DSL:', this.canDSL)
-        })
+      const checkEditorTypes = async () => { // TODO: (Nad) Does this need to be done other places as well, e.g. when loading a rule from the event source?
+        const [yamlResult, dslResult] = await Promise.allSettled([
+          canSerializeRules({
+            targetFormat: 'application/yaml',
+            body: [this.ruleId]
+          }),
+          canSerializeRules({
+            targetFormat: 'application/vnd.openhab.dsl.rule',
+            body: [this.ruleId]
+          })
+        ])
+        if (yamlResult.status === 'fulfilled') {
+          const yamlRes = yamlResult.value.results.filter((r) => r.uid === this.ruleId)
+          this.canYAML = yamlRes.length > 0 && yamlRes[0].ok
+        } else {
+          this.canYAML = false
+          console.warn('Failed to check YAML serialization support:', yamlResult.reason)
+        }
+        if (dslResult.status === 'fulfilled') {
+          const dslRes = dslResult.value.results.filter((r_1) => r_1.uid === this.ruleId)
+          this.canDSL = dslRes.length > 0 && dslRes[0].ok
+        } else {
+          this.canDSL = false
+          console.error('Failed to check DSL serialization support:', dslResult.reason)
+        }
+        console.debug('Can serialize ' + this.ruleId + ' to YAML:', this.canYAML)
+        console.debug('Can serialize ' + this.ruleId + ' to DSL:', this.canDSL)
       }
 
       this.$oh.api.get('/rest/module-types?asMap=true').then((data) => {
@@ -552,14 +569,16 @@ export default {
             if (data2.templateUID) {
               this.$oh.api.get('/rest/templates').then((templateData) => {
                 this.templates = templateData
-                checkEditorTypes()
+                checkEditorTypes().then(() => {
+                  if (!this.eventSource) this.startEventSource()
+                  loadingFinished()
+                })
+              })
+            } else {
+              checkEditorTypes().then(() => {
                 if (!this.eventSource) this.startEventSource()
                 loadingFinished()
               })
-            } else {
-              checkEditorTypes()
-              if (!this.eventSource) this.startEventSource()
-              loadingFinished()
             }
           })
         }
@@ -1108,6 +1127,15 @@ export default {
     },
     labelValid() {
       return this.rule?.name?.trim()
+    },
+    hasCode() {
+      return this.canYAML || this.canDSL
+    },
+    validMediaTypes() {
+      const types = []
+      if (this.canYAML) types.push('application/yaml+rule')
+      if (this.canDSL) types.push('application/vnd.openhab.dsl.rule')
+      return types
     },
     ...mapStores(useUIOptionsStore)
   }

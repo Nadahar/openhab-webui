@@ -170,6 +170,9 @@ const dynamicExtensions = computed((): Extension[] => {
   }
 
   extensions.push(EditorState.readOnly.of(props.readOnly ?? false))
+  if (props?.mode === 'application/vnd.openhab.dsl.rule') {
+    extensions.push(EditorState.tabSize.of(4))
+  }
 
   return extensions
 })
