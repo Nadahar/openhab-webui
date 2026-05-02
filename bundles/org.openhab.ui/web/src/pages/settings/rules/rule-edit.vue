@@ -440,6 +440,7 @@ export default {
 
       emptyMediaTypeTemplates: {
         'application/vnd.openhab.dsl.rule': () => {
+          this.codeDirty = true
           return `rule "${this.rule.name || 'New Rule'}" uid="${this.rule.uid || f7.utils.id()}"\nwhen\n\nthen\n\nend\n`
         }
       }
@@ -620,6 +621,7 @@ export default {
       if (this.currentTab === newTab) return
 
       // We can't prevent the tab switch here. Instead, we'll switch back if parsing fails
+      const previousTab = this.currentTab
       this.currentTab = newTab
 
       const editor = this.$refs.codeEditor
@@ -633,7 +635,7 @@ export default {
             editor.generateCode()
           }
         })  
-      } else if (this.currentTab === 'code' && this.codeDirty) {
+      } else if (previousTab === 'code' && this.codeDirty) {
         editor.parseCode(
           () => {
             this.codeDirty = false
