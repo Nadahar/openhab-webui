@@ -5,7 +5,7 @@
         <f7-list inline-labels no-hairlines-md>
           <f7-list-input
             ref="ruleId"
-            :label="`${type} ID`"
+            :label="`${type} UID`"
             type="text"
             :placeholder="`A unique identifier for the ${type.toLowerCase()}`"
             :value="rule.uid || ''"
@@ -67,7 +67,7 @@
       <f7-col class="skeleton-text skeleton-effect-blink">
         <f7-list inline-labels no-hairlines-md>
           <f7-list-input
-            label="Rule ID"
+            :label="`${type} UID`"
             type="text"
             placeholder="Required"
             value="_______"
