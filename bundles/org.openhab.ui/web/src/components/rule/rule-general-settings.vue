@@ -67,7 +67,7 @@
       <f7-col class="skeleton-text skeleton-effect-blink">
         <f7-list inline-labels no-hairlines-md>
           <f7-list-input
-            label="Rule UID"
+            :label="`${type} UID`"
             type="text"
             placeholder="Required"
             value="_______"
