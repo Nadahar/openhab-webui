@@ -8,7 +8,7 @@
             :label="`${type} ID`"
             type="text"
             :placeholder="`A unique identifier for the ${type.toLowerCase()}`"
-            :value="rule.uid"
+            :value="rule.uid || ''"
             required
             :validate="editable"
             :disabled="!createMode ? true : null"
@@ -16,7 +16,7 @@
             input-id="input"
             pattern="[A-Za-z0-9_\-]+"
             error-message="Required. A-Z,a-z,0-9,_,- only"
-            @input="rule.uid = $event.target.value"
+            @input="rule.uid = $event.target.value || undefined"
             :clear-button="createMode">
             <template #inner>
               <f7-link
@@ -33,18 +33,18 @@
             type="text"
             :placeholder="`${type} label for display purposes`"
             :info="createMode ? 'Required' : ''"
-            :value="rule.name"
+            :value="rule.name || ''"
             required
             validate
             :disabled="!editable ? true : null"
-            @input="rule.name = $event.target.value"
+            @input="rule.name = $event.target.value || undefined"
             :clear-button="editable" />
           <f7-list-input
             label="Description"
             type="text"
-            :value="rule.description"
+            :value="rule.description || ''"
             :disabled="!editable ? true : null"
-            @input="rule.description = $event.target.value"
+            @input="rule.description = $event.target.value || undefined"
             :clear-button="editable" />
         </f7-list>
         <f7-list inline-labels no-hairlines-md>
