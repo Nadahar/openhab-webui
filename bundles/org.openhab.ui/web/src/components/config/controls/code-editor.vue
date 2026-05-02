@@ -38,7 +38,7 @@
         v-if="showShowAllCheckbox"
         class="opt-show-all display-flex text-color-blue"
         v-model:checked="isShowAll"
-        @update:checked="switchShowAll()">
+        @update:checked="switchShowAll">
         <span>Show all</span>
       </f7-checkbox>
     </div>
@@ -155,7 +155,9 @@ export default {
     readOnly: Boolean,
     readOnlyMsg: String,
     validMediaTypes: Array, // Optional list of media types to show. If not provided, all media types for the object type will be shown
-    optShowAllMediaTypes: Array // Optional list of media types that will show the "Show all" checkbox. If not provided, the checkbox will not be shown
+    optShowAllMediaTypes: Array, // Optional list of media types that will show the "Show all" checkbox. If not provided, the checkbox will not be shown
+    isObjectEmpty: Boolean, // Optional flag to indicate if the object is empty and can't be serialized.
+    emptyMediaTypeTemplates: Object // Optional map of media types to template objects that can be used for empty objects that can't be serialized
   },
   // @parsed  event is emitted when the code has been parsed back into an object
   //          as a result of calling the parseCode() method
@@ -218,6 +220,20 @@ export default {
       codeType ||= this.uiOptionsStore.codeEditorType
       const sourceMediaType = MediaType.JSON
       let targetMediaType = this.mediaTypes[codeType]
+      if (this.isObjectEmpty && this.emptyMediaTypeTemplates) {
+        const emptyTemplate = this.emptyMediaTypeTemplates[targetMediaType]
+        if (emptyTemplate) {
+          let emptyCode = typeof emptyTemplate === 'function' ? emptyTemplate() : emptyTemplate
+          this.code = emptyCode
+          this.originalCode = emptyCode
+
+          this.uiOptionsStore.codeEditorType = codeType
+          if (onSuccessCallback) {
+            onSuccessCallback()
+          }
+          return
+        }
+      }
       const ruleShowAll = targetMediaType === 'application/yaml+rule' && this.isShowAll
       targetMediaType = targetMediaType.split('+')[0] // remove the +thing, +item or +rule suffix, if present
       const params = new URLSearchParams()
@@ -250,8 +266,9 @@ export default {
      *
      * @param {function} onSuccessCallback - Optional. A callback function to call when the code has been parsed
      * @param {function} onFailureCallback - Optional. A callback function to call when parsing fails or no object is found
+     * @param {Object} params - Optional. Additional parameters for the parsing request
      */
-    parseCode(onSuccessCallback, onFailureCallback) {
+    parseCode(onSuccessCallback, onFailureCallback, params = {}) {
       let sourceMediaType = this.mediaTypes[this.uiOptionsStore.codeEditorType]
       sourceMediaType = sourceMediaType.split('+')[0] // remove the +thing, +item or +rule suffix, if present
       const targetMediaType = MediaType.JSON
@@ -268,7 +285,7 @@ export default {
           let object = JSON.parse(data.data)
           object = object[this.objectType]
           if (object?.length > 0) {
-            this.$emit('parsed', object[0])
+            this.$emit('parsed', object[0], params)
             if (onSuccessCallback) {
               onSuccessCallback()
             }
@@ -324,16 +341,16 @@ export default {
       } else {
         this.parseCode(() => {
           this.generateCode(type)
-        })
+        }, undefined, { editorType: this.uiOptionsStore.codeEditorType, showAll: this.isShowAll })
       }
     },
-    switchShowAll() {
+    switchShowAll(checked) {
       if (this.readOnly || !this.dirty) {
         this.generateCode(this.uiOptionsStore.codeEditorType)
       } else {
         this.parseCode(() => {
           this.generateCode(this.uiOptionsStore.codeEditorType)
-        })
+        }, undefined, { editorType: this.uiOptionsStore.codeEditorType, showAll: !checked })
       }
     },
     copy() {
