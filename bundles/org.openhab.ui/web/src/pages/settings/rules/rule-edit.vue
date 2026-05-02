@@ -301,6 +301,8 @@
           :read-only-msg="notEditableMsg"
           :valid-media-types="validMediaTypes"
           :opt-show-all-media-types="['application/yaml+rule']"
+          :is-object-empty="isEmpty"
+          :empty-media-type-templates="emptyMediaTypeTemplates"
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged" />
@@ -434,7 +436,13 @@ export default {
       notEditableMsg: 'This rule is read-only.', // TODO: (Nad) rule/script/scene
 
       canYAML: false,
-      canDSL: false
+      canDSL: false,
+
+      emptyMediaTypeTemplates: {
+        'application/vnd.openhab.dsl.rule': () => {
+          return `rule "${this.rule.name || 'New Rule'}" uid="${this.rule.uid || f7.utils.id()}"\nwhen\n\nthen\n\nend\n`
+        }
+      }
     }
   },
   watch: {
@@ -474,35 +482,6 @@ export default {
             this.switchTab('source')
           }
         })
-      }
-
-      const checkEditorTypes = async () => { // TODO: (Nad) Does this need to be done other places as well, e.g. when loading a rule from the event source?
-        const [yamlResult, dslResult] = await Promise.allSettled([
-          canSerializeRules({
-            targetFormat: 'application/yaml',
-            body: [this.ruleId]
-          }),
-          canSerializeRules({
-            targetFormat: 'application/vnd.openhab.dsl.rule',
-            body: [this.ruleId]
-          })
-        ])
-        if (yamlResult.status === 'fulfilled') {
-          const yamlRes = yamlResult.value.results.filter((r) => r.uid === this.ruleId)
-          this.canYAML = yamlRes.length > 0 && yamlRes[0].ok
-        } else {
-          this.canYAML = false
-          console.warn('Failed to check YAML serialization support:', yamlResult.reason)
-        }
-        if (dslResult.status === 'fulfilled') {
-          const dslRes = dslResult.value.results.filter((r_1) => r_1.uid === this.ruleId)
-          this.canDSL = dslRes.length > 0 && dslRes[0].ok
-        } else {
-          this.canDSL = false
-          console.error('Failed to check DSL serialization support:', dslResult.reason)
-        }
-        console.debug('Can serialize ' + this.ruleId + ' to YAML:', this.canYAML)
-        console.debug('Can serialize ' + this.ruleId + ' to DSL:', this.canDSL)
       }
 
       this.$oh.api.get('/rest/module-types?asMap=true').then((data) => {
@@ -547,10 +526,12 @@ export default {
               }
               this.currentTemplate = currentTemplate
             }
-            loadingFinished()
+            this.resolveEditorTypes().then(() => {
+              // no need for an event source, the rule doesn't exist yet
+              loadingFinished()
+            })
           })
-          // no need for an event source, the rule doesn't exist yet
-        } else if (this.stubMode) {
+        } else if (this.stubMode) { // TODO: (Nad) Figure out show code
           if (!this.ruleCopy || !this.ruleCopy.templateUID) {
             showToast(
               !this.ruleCopy
@@ -582,13 +563,13 @@ export default {
             if (data2.templateUID) {
               this.$oh.api.get('/rest/templates').then((templateData) => {
                 this.templates = templateData
-                checkEditorTypes().then(() => {
+                this.resolveEditorTypes().then(() => {
                   if (!this.eventSource) this.startEventSource()
                   loadingFinished()
                 })
               })
             } else {
-              checkEditorTypes().then(() => {
+              this.resolveEditorTypes().then(() => {
                 if (!this.eventSource) this.startEventSource()
                 loadingFinished()
               })
@@ -597,50 +578,129 @@ export default {
         }
       })
     },
+    async resolveEditorTypes() {
+      if (this.createMode && this.isEmpty) {
+        // Allow code editors for new, empty rules that haven't been edited yet.
+        this.canYAML = true
+        this.canDSL = true
+        return
+      }
+      const [yamlResult, dslResult] = await Promise.allSettled([
+        canSerializeRules({
+          targetFormat: 'application/yaml',
+          body: {
+            rules: [this.rule]
+          }
+        }),
+        canSerializeRules({ // TODO: (Nad) Figure out how to handle empty DSL
+          targetFormat: 'application/vnd.openhab.dsl.rule',
+          body: {
+            rules: [this.rule]
+          }
+        })
+      ])
+      if (yamlResult.status === 'fulfilled') {
+        const yamlRes = yamlResult.value.results.filter((r) => r.uid === this.rule.uid)
+        this.canYAML = yamlRes.length > 0 && yamlRes[0].ok
+      } else {
+        this.canYAML = false
+        console.warn('Failed to check YAML serialization support:', yamlResult.reason)
+      }
+      if (dslResult.status === 'fulfilled') {
+        const dslRes = dslResult.value.results.filter((r_1) => r_1.uid === this.rule.uid)
+        this.canDSL = dslRes.length > 0 && dslRes[0].ok
+      } else {
+        this.canDSL = false
+        console.error('Failed to check DSL serialization support:', dslResult.reason)
+      }
+      console.debug('Can serialize ' + this.rule.uid + ' to YAML:', this.canYAML)
+      console.debug('Can serialize ' + this.rule.uid + ' to DSL:', this.canDSL)
+    },
     switchTab(newTab) {
       if (this.currentTab === newTab) return
 
       // We can't prevent the tab switch here. Instead, we'll switch back if parsing fails
       this.currentTab = newTab
 
+      const editor = this.$refs.codeEditor
       if (newTab === 'code') {
-        this.$refs.codeEditor.generateCode()
-      } else if (this.codeDirty) {
-        this.$refs.codeEditor.parseCode(
+        this.resolveEditorTypes().then(() => {
+          if (!this.hasCode) {
+            showToast('This rule cannot be shown in code form because it contains elements that cannot be serialized to YAML or DSL.')
+            this.currentTab = 'design'
+            f7.tab.show('#design')
+          } else {
+            editor.generateCode()
+          }
+        })  
+      } else if (this.currentTab === 'code' && this.codeDirty) {
+        editor.parseCode(
           () => {
             this.codeDirty = false
           },
           () => {
             this.currentTab = 'code'
             f7.tab.show('#code')
-          }
+          },
+          { editorType: this.uiOptionsStore.codeEditorType, showAll: editor.isShowAll }
         )
       }
     },
     onCodeChanged(codeDirty) {
       this.codeDirty = codeDirty
     },
-    updateRule(updatedRule) { //TODO: (Nad) Figure out different detail levels and YAML/DSL
+    updateRule(updatedRule, params = {}) {
+      const yaml = params.editorType === 'YAML'
+      const showAll = params.showAll || false
       try {
-        if (this.rule.UID && updatedRule.UID !== this.rule.UID) throw new Error('Changing the rule UID is not supported')
-        if (updatedRule.templateUID !== this.rule.templateUID) {
-          this.rule.templateUID = updatedRule.templateUID
-          // if the template is changed, the templateState becomes irrelevant
-          delete this.rule.templateState
+        if (!this.createMode && this.rule.uid && updatedRule.uid !== this.rule.uid) throw new Error('Changing the rule UID is not allowed, it must remain "' + this.rule.uid + '"')
+        if (yaml) {
+          if (showAll && updatedRule.templateState != this.rule.templateState) {
+            console.debug(`Ignoring template state change to ${updatedRule.templateState}, template state is controlled by the rule engine.`)
+          }
+          if (updatedRule.templateUID !== this.rule.templateUID) {
+            this.rule.templateUID = updatedRule.templateUID
+            // if the template is changed, the templateState becomes invalid
+            delete this.rule.templateState
+          }
         }
         if (updatedRule.name !== this.rule.name) this.rule.name = updatedRule.name
         if (!fastDeepEqual(updatedRule.tags, this.rule.tags)) this.rule.tags = updatedRule.tags
         if (updatedRule.description !== this.rule.description) this.rule.description = updatedRule.description
-        if (updatedRule.visibility !== this.rule.visibility) this.rule.visibility = updatedRule.visibility
-        if (!fastDeepEqual(updatedRule.configuration, this.rule.configuration)) this.rule.configuration = updatedRule.configuration
-        if (!fastDeepEqual(updatedRule.configDescriptions, this.rule.configDescriptions)) this.rule.configDescriptions = updatedRule.configDescriptions
+        if (!this.rule.description) {
+          // The UI control returns an empty string for description if it's not set, but the code editor sets it to null if it's not set.
+          // In both cases, we want to end up with no description.
+          delete this.rule.description
+        }
+        if (yaml && (updatedRule.visibility !== this.rule.visibility && (showAll || updatedRule.visibility !== 'VISIBLE'))) {
+          this.rule.visibility = updatedRule.visibility
+        }
+
+        if (yaml) {
+          // "source", "sourceType" and "sharedContext" should only exist for read-only rules, so they should never get here.
+          // If they do, they will be stripped from the rule unless "showAll" is enabled, which would be confusing to the user, 
+          // so let's make sure they don't get here by throwing an error if they do.
+          const updatedConfigKeys = Object.keys(updatedRule.configuration || {})
+          if (updatedConfigKeys.includes('source') || updatedConfigKeys.includes('sourceType') || updatedConfigKeys.includes('sharedContext')) {
+            throw new Error(`Invalid configuration key ${updatedConfigKeys.find(key => ['source', 'sourceType', 'sharedContext'].includes(key))} found.`)
+          }
+          if (!fastDeepEqual(updatedRule.configuration, this.rule.configuration)) this.rule.configuration = updatedRule.configuration
+        }
+        
+        if (yaml && showAll) {
+          // The configuration description is only shown with YAML and showAll enabled, so leave it along unless both conditions are true
+          if (!fastDeepEqual(updatedRule.configDescriptions, this.rule.configDescriptions)) this.rule.configDescriptions = updatedRule.configDescriptions
+        }
+
         if (!fastDeepEqual(updatedRule.conditions, this.rule.conditions)) this.rule.conditions = updatedRule.conditions
         if (!fastDeepEqual(updatedRule.actions, this.rule.actions)) this.rule.actions = updatedRule.actions
         if (!fastDeepEqual(updatedRule.triggers, this.rule.triggers)) this.rule.triggers = updatedRule.triggers
 
+        this.resolveEditorTypes()
         return true
       } catch (e) {
         f7.dialog.alert(e).open()
+        this.resolveEditorTypes()
         return false
       }
     },
@@ -1008,7 +1068,7 @@ export default {
         this.isEditable ? undefined : this.replacer
       )
     },
-    fromYaml() {
+    fromYaml() { // TODO: (Nad) Remove
       if (!this.isEditable || !this.ruleYaml) return
       try {
         const updatedRule = YAML.parse(this.ruleYaml)
@@ -1141,6 +1201,26 @@ export default {
       if (this.canYAML) types.push('application/yaml+rule')
       if (this.canDSL) types.push('application/vnd.openhab.dsl.rule')
       return types
+    },
+    /**
+     * Determines if the rule is "empty" from the code editor's perspective. An "empty" rule is one that
+     * can't yet be tested for YAML/DSL serialization support, and will allow showing the code editor
+     * regardless, so that a new rule can be created from the code editor.
+     * 
+     * To qualify as empty, the rule must not have any properties other than an optional UID, and optional
+     * label/name, and optional empty arrays for triggers, actions, and conditions.
+     * 
+     * @returns true if the rule is "empty" as defined above, false otherwise
+     */
+    isEmpty() {
+      const rule = this.rule
+      if (!rule) return true
+      if (rule.description || rule.tags?.length || rule.templateUID || (rule.visibility && rule.visibility !== 'VISIBLE')
+        || (rule.configuration && Object.keys(rule.configuration).length > 0) || (rule.configDescriptions && Object.keys(rule.configDescriptions).length > 0)
+        || rule.triggers?.length > 0 || rule.actions?.length > 0 || rule.conditions?.length > 0) { 
+        return false
+      }
+      return true
     },
     ...mapStores(useUIOptionsStore)
   }
