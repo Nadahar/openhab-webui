@@ -291,7 +291,6 @@
       <!--/f7-tab-->
       <f7-tab v-if="ready && hasCode && rule" id="code" :tab-active="currentTab === 'code' ? true : null">
         <!-- v-if="ready" ensures that thingType and channelTypes are populated TODO: Fix this -->
-        <!-- :hint-context="{ thingType: thingType, channelTypes: channelTypes }" -->
         <code-editor
           v-if="ready"
           ref="codeEditor"
@@ -305,6 +304,7 @@
           :is-object-empty="isEmpty"
           :empty-media-type-templates="emptyMediaTypeTemplates"
           :post-parse-callback="() => { return this.resolveEditorTypes() }"
+          :hint-context="{ rule: rule }"
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged" />
@@ -637,7 +637,7 @@ export default {
             this.currentTab = 'design'
             f7.tab.show('#design')
           } else {
-            editor.generateCode()
+            this.$refs.codeEditor.generateCode()
           }
         })  
       } else if (previousTab === 'code' && this.codeDirty) {
