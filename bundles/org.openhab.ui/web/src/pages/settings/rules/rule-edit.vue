@@ -303,6 +303,7 @@
           :opt-show-all-media-types="['application/yaml+rule']"
           :is-object-empty="isEmpty"
           :empty-media-type-templates="emptyMediaTypeTemplates"
+          :post-parse-callback="() => { return this.resolveEditorTypes() }"
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged" />
@@ -1089,7 +1090,7 @@ export default {
      * @param key the key being processed
      * @param value the value being processed
      */
-    replacer(key, value) {
+    replacer(key, value) { // TODO: (Nad) Remove
       switch (key) {
         case 'script':
           return value ? value.replaceAll(/(\r\n|\r)/g, '\n') : value

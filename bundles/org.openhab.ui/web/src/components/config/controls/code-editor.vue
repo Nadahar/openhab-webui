@@ -157,7 +157,8 @@ export default {
     validMediaTypes: Array, // Optional list of media types to show. If not provided, all media types for the object type will be shown
     optShowAllMediaTypes: Array, // Optional list of media types that will show the "Show all" checkbox. If not provided, the checkbox will not be shown
     isObjectEmpty: Boolean, // Optional flag to indicate if the object is empty and can't be serialized.
-    emptyMediaTypeTemplates: Object // Optional map of media types to template objects that can be used for empty objects that can't be serialized
+    emptyMediaTypeTemplates: Object, // Optional map of media types to template objects that can be used for empty objects that can't be serialized
+    postParseCallback: Function // Optional callback function that is called after parsing the code back into an object, which allow various states to be updated
   },
   // @parsed  event is emitted when the code has been parsed back into an object
   //          as a result of calling the parseCode() method
@@ -226,6 +227,7 @@ export default {
           let emptyCode = typeof emptyTemplate === 'function' ? emptyTemplate() : emptyTemplate
           this.code = emptyCode
           this.originalCode = emptyCode
+          this.dirty = false
 
           this.uiOptionsStore.codeEditorType = codeType
           if (onSuccessCallback) {
@@ -249,6 +251,7 @@ export default {
           // therefore normalize before loading in editor.
           this.code = code.replaceAll('\r\n', '\n').replaceAll('\r', '\n')
           this.originalCode = this.code
+          this.dirty = false
           this.uiOptionsStore.codeEditorType = codeType
           if (onSuccessCallback) {
             onSuccessCallback()
@@ -340,7 +343,26 @@ export default {
         this.generateCode(type)
       } else {
         this.parseCode(() => {
-          this.generateCode(type)
+          if (this.postParseCallback) {
+            const result = this.postParseCallback()
+            if (result instanceof Promise) {
+              result.then(() => {
+                if (!this.mediaTypes[type]) {
+                  f7.dialog.alert(`The current object isn't compatible with ${type} format.`).open()
+                  return
+                }
+                this.generateCode(type)
+              })
+            } else {
+              if (!this.mediaTypes[type]) {
+                console.warn(`The current object isn't compatible with ${type} format. Aborting switch.`)
+                return
+              }
+              this.generateCode(type)
+            }
+          } else {
+            this.generateCode(type)
+          }
         }, undefined, { editorType: this.uiOptionsStore.codeEditorType, showAll: this.isShowAll })
       }
     },
@@ -349,6 +371,9 @@ export default {
         this.generateCode(this.uiOptionsStore.codeEditorType)
       } else {
         this.parseCode(() => {
+          if (this.postParseCallback) {
+            this.postParseCallback()
+          }
           this.generateCode(this.uiOptionsStore.codeEditorType)
         }, undefined, { editorType: this.uiOptionsStore.codeEditorType, showAll: !checked })
       }
