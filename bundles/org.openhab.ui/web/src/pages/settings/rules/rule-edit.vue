@@ -445,7 +445,6 @@ export default {
 
       emptyMediaTypeTemplates: {
         'application/vnd.openhab.dsl.rule': () => {
-          this.codeDirty = true
           return `rule "${this.rule.name || 'New Rule'}" uid="${this.rule.uid || f7.utils.id()}"\nwhen\n\nthen\n\nend\n`
         }
       }
