@@ -1,21 +1,21 @@
 import { CompletionContext, insertCompletionText, type Completion, type CompletionResult } from '@codemirror/autocomplete'
-import { findParent, findParentRoot, isConfig, isRuleSection } from './yaml-utils'
+import { findParent, findParentRoot, isConfig, isRuleSection, lineIndent, findRootSection } from './yaml-utils'
 import { completionStart, hintItems, hintParameterValues, hintParameters } from './hint-utils'
 import type { Line } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 
 import * as api from '@/api'
 
-let moduleTypesCache: api.ModuleType[] | null = null
+let moduleTypesCache: { [section: string]: api.ModuleType[] | null } = {}
 
 async function getModuleTypes(section: string) {
-  if (moduleTypesCache) return moduleTypesCache
+  if (moduleTypesCache[section]) return moduleTypesCache[section]
 
   const result = await api.getModuleTypes({ type: section })
 
   if (result) {
-    moduleTypesCache = result
-    return moduleTypesCache
+    moduleTypesCache[section] = result
+    return moduleTypesCache[section]
   }
 
   return []
@@ -75,22 +75,152 @@ function getNextId(view: EditorView) {
   return nextId
 }
 
-function buildModuleStructure(view: EditorView, moduleType: api.ModuleType) {
-  const nextId = getNextId(view)
-  let ret = `  - inputs: {}\n    id: "${nextId}"\n`
+function moduleTypeTypeToAlias(section: string, type: string) {
+  // For well-known module type types, we can use a shorter alias in the hint insert text
+  switch (section) {
+    case 'action':
+      if (type === 'core.RuleEnablementAction') return 'EnableRule'
+      if (type === 'core.ItemCommandAction') return 'SendCommand'
+      if (type === 'core.ItemStateUpdateAction') return 'PostUpdate'
+      if (type === 'core.RunRuleAction') return 'RunRule'
+      if (type === 'media.PlayAction') return 'Play'
+      if (type === 'media.SayAction') return 'Say'
+      if (type === 'script.ScriptAction') return 'Script'
+      break
+    case 'trigger':
+      if (type === 'core.ChannelEventTrigger') return 'ChannelEvent'
+      if (type === 'timer.GenericCronTrigger') return 'Cron'
+      if (type === 'timer.DateTimeTrigger') return 'DateTime'
+      if (type === 'core.GroupCommandTrigger') return 'MemberReceivedCommand'
+      if (type === 'core.GroupStateChangeTrigger') return 'MemberChanged'
+      if (type === 'core.GroupStateUpdateTrigger') return 'MemberUpdated'
+      if (type === 'core.ItemCommandTrigger') return 'ItemReceivedCommand'
+      if (type === 'core.ItemStateChangeTrigger') return 'ItemChanged'
+      if (type === 'core.ItemStateUpdateTrigger') return 'ItemUpdated'
+      if (type === 'core.SystemStartlevelTrigger') return 'StartLevel'
+      if (type === 'core.ThingStatusChangeTrigger') return 'ThingChanged'
+      if (type === 'core.ThingStatusUpdateTrigger') return 'ThingUpdated'
+      if (type === 'timer.TimeOfDayTrigger') return 'TimeOfDay'
+      break
+    case 'condition':
+      if (type === 'timer.DayOfWeekCondition') return 'DayOfWeek'
+      if (type === 'ephemeris.DaysetCondition') return 'Dayset'
+      if (type === 'ephemeris.HolidayCondition') return 'Holiday'
+      if (type === 'timer.IntervalCondition') return 'Interval'
+      if (type === 'core.ItemStateCondition') return 'ItemState'
+      if (type === 'ephemeris.NotHolidayCondition') return 'NotHoliday'
+      if (type === 'script.ScriptCondition') return 'Script'
+      if (type === 'core.ThingStatusCondition') return 'ThingStatus'
+      if (type === 'core.TimeOfDayCondition') return 'TimeOfDay'
+      if (type === 'ephemeris.WeekdayCondition') return 'Weekday'
+      if (type === 'ephemeris.WeekendCondition') return 'Weekend'
+      break
+  }
+  return type
+}
+
+function buildModuleStructure(section: string, moduleType: api.ModuleType, baseIndent: number = 0) {
+  const indent = ' '.repeat(baseIndent + 2)
+  const itemIndent = ' '.repeat(baseIndent + 4)
+  const configIndent = ' '.repeat(baseIndent + 6)
+  
+  let ret = `${indent}- type: ${moduleTypeTypeToAlias(section, moduleType.uid)}\n${itemIndent}label: ${moduleType.label}\n`
+  if (moduleType.description) {
+    ret += `${itemIndent}description: ${moduleType.description}\n`
+  }
   if (moduleType.configDescriptions.some((p) => p.required)) {
-    ret += '    configuration:\n'
+    ret += `${itemIndent}config:\n`
     for (const configDescription of moduleType.configDescriptions.filter((m) => m.required)) {
-      ret += '      ' + configDescription.name + ': \n'
+      ret += `${configIndent}${configDescription.name}: \n`
     }
   }
-  ret += '    type: ' + moduleType.uid + '\n  '
+  ret += `${indent}  `
   return ret
 }
 
 function hintSceneItems(context: CompletionContext): CompletionResult | Promise<CompletionResult | null> | null {
   console.info('hinting in the items section (scenes)')
   return hintItems(context, { indent: 2, suffix: ': ' })
+}
+
+function hintRuleStructure(
+  context: CompletionContext,
+  line: Line,
+  parentLine: Line
+): CompletionResult | Promise<CompletionResult | null> | null {
+  return {
+    from: completionStart(context),
+    validFor: /\w+/,
+    options: [
+      {
+        label: 'Add label',
+        info: 'Adds the rule label (name)',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    label: `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add description',
+        info: 'Adds the rule description',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    description: `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add tags section',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    tags:\n      - `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add triggers section',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    triggers:\n      - `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add conditions section',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    conditions:\n      - `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add actions section',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    actions:\n      - `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add configuration section',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    config:\n      `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      {
+        label: 'Add template',
+        info: 'Adds the rule template reference',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `    template: `
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      },
+      { // TODO: (Nad) This
+        label: 'Add new rule',
+        info: 'Adds a new rule with default configuration',
+        apply: (view: EditorView, _completion: Completion, _from: number, _to: number) => {
+          const insert = `- name: New Rule\n  uid: ${crypto.randomUUID()}\n  templateState: uninitialized\n  visibility: visible\n  tags: []\n  triggers:\n  conditions:\n  actions:\n`
+          view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
+        }
+      }
+    ]
+  }
 }
 
 function hintModuleStructure(
@@ -104,8 +234,9 @@ function hintModuleStructure(
     return null // todo: hint commands?
   }
 
+  const parentIndent = lineIndent(parentLine)
   const apply = (view: EditorView, completion: Completion, _from: number, _to: number) => {
-    const insert = buildModuleStructure(view, (completion as Completion & { moduleType: api.ModuleType }).moduleType)
+    const insert = buildModuleStructure(section, (completion as Completion & { moduleType: api.ModuleType }).moduleType, parentIndent)
     view.dispatch(insertCompletionText(view.state, insert, line.from, line.to))
   }
 
@@ -127,15 +258,40 @@ function hintModuleStructure(
 
 export default function hint(context: CompletionContext): CompletionResult | Promise<CompletionResult | null> | null {
   const line = context.state.doc.lineAt(context.pos)
+
+  const rootSection = findRootSection(context, line)
+  if (!(rootSection?.type === 'rules')) {
+    console.debug(`not in rules root section (${rootSection?.type}), skipping hint`)
+    return null
+  }
+
   const parentLine = findParent(context, line)
-  console.debug('parent line', parentLine)
+  console.debug('parent line', parentLine?.text)
 
   if (!parentLine) return null
 
-  if (isConfig(parentLine)) {
-    return hintConfig(context, line, parentLine)
-  } else if (isRuleSection(parentLine)) {
-    return hintModuleStructure(context, line, parentLine)
+  const parentIndent = lineIndent(parentLine)
+  if (parentIndent === 2) {
+    return hintRuleStructure(context, line, parentLine)
+  } else if (parentIndent === 4) {
+    if (parentLine.text.match(/^    (triggers|conditions|actions):\s*$/)) {
+      return hintModuleStructure(context, line, parentLine)
+    }
   }
-  return null
+
+  return hintModuleStructure(context, line, line) ?? hintConfig(context, line, line)
+
+
+  // if (isConfig(parentLine)) {
+  //   return hintConfig(context, line, parentLine)
+  // }
+  
+  // // Check if we're inside a rule section (triggers, conditions, actions, items)
+  // // by finding the root section header
+  // const rootRuleSection = findRootSection(context, line)
+  // if (rootRuleSection) {
+  //   return hintModuleStructure(context, line, rootRuleSection)
+  // }
+  
+  // return null
 }

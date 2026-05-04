@@ -51,7 +51,25 @@ export function isComponent(line: Line | undefined) {
   return line.text.match(/^ *-? ?component:/)
 }
 
-export function isRuleSection(line: Line | undefined) {
+export function isRuleSection(line: Line | undefined) { // TODO: (Nad) Remove?
   if (!line) return false
-  return line.text.match(/^(triggers|conditions|actions|items):/)
+  return line.text.match(/^ *(triggers|conditions|actions|items):/)
+}
+
+export interface RootSection {
+  type: string
+  line: Line
+}
+
+export function findRootSection(context: CompletionContext, line: Line): RootSection | undefined {
+  // Traverse up to find the root-level section
+  let match: RegExpMatchArray | null = null
+  for (let l = line.number; l > 0; l--) {
+    const checkLine = context.state.doc.line(l)
+    match = checkLine.text.match(/^(\w+):\s*$/)
+    if (match && match.length === 2) {
+      return { type: match[1], line: checkLine }
+    }
+  }
+  return undefined
 }
