@@ -52,11 +52,6 @@ export function isComponent(line: Line | undefined) {
   return line.text.match(/^ *-? ?component:/)
 }
 
-export function isRuleSection(line: Line | undefined) { // TODO: (Nad) Remove?
-  if (!line) return false
-  return line.text.match(/^ *(triggers|conditions|actions|items):/)
-}
-
 export interface RootSection {
   type: string
   line: Line
