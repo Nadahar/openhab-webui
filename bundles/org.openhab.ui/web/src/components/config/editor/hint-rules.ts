@@ -60,11 +60,9 @@ function hintModuleConfig(context: CompletionContext, line: Line, parentLine: Li
     if (lineIndent(arrayElementLine, true) < parentIndent) return null
   }
   let moduleTypeUid = findModuleType(context, arrayElementLine)
-  console.debug(`hinting config for module type: ${moduleTypeUid}`)
   if (!moduleTypeUid) return null
 
   const section = grandParentLine.text.replace('s:', '').trim()
-  console.debug(`section: ${section}`)
   if (!section) return null
   moduleTypeUid = aliasToModuleTypeType(section, moduleTypeUid)
 
@@ -82,18 +80,13 @@ function hintModuleConfig(context: CompletionContext, line: Line, parentLine: Li
         if (result instanceof Promise) {
           result.then((r) => {
             applyAliasToMimeType(section, r)
-            console.debug('hintParameterValues result for type parameter', r)
           })
         } else {
           applyAliasToMimeType(section, result)
-          console.debug('hintParameterValues result for type parameter', result)
         }
-      } else {
-        console.debug('hintParameterValues result', result)
       }
       return result
     }
-    console.debug(moduleType)
     return hintParameters(context, parameters, indent)
   })
 }
@@ -411,12 +404,10 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
 
   const rootSection = findRootSection(context, line)
   if (!(rootSection?.type === 'rules')) {
-    console.debug(`not in rules root section (${rootSection?.type}), skipping hint`)
     return null
   }
 
   const parentLine = findParent(context, line, true)
-  console.debug('parent line', parentLine?.text)
 
   if (!parentLine) return null
 
@@ -434,7 +425,6 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
   } else {
     const grandParentLine = findParent(context, parentLine, true)
     if (parentIndent === 4 && grandParentLine) {
-      console.debug('parent indent 4')
       if (isModuleElement(parentLine)) {
         if (afterColon) {
           return hintModuleValue(context, line, parentLine)
@@ -446,7 +436,6 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
       }
     } else if (grandParentLine) {
       if (parentIndent === 6) {
-        console.debug('parent indent 6')
         if (isModuleElement(grandParentLine)) {
           if (afterColon) {
             return hintParameterValues(context, [], line, colonPos)
@@ -455,7 +444,6 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
         }
       } else {
         if (parentIndent === 8) {
-          console.debug('parent indent 8')
           if (isModuleElement(grandParentLine)) {
             return hintModuleConfig(context, line, parentLine, grandParentLine)
           }
