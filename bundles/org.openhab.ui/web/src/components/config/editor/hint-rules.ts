@@ -105,6 +105,7 @@ const MODULE_TYPE_ALIASES: { [section: string]: { [key: string]: string } } = {
     'core.ChannelEventTrigger': 'ChannelEvent',
     'timer.GenericCronTrigger': 'Cron',
     'timer.DateTimeTrigger': 'DateTime',
+    'core.GenericEventTrigger': 'GenericEvent',
     'core.GroupCommandTrigger': 'MemberReceivedCommand',
     'core.GroupStateChangeTrigger': 'MemberChanged',
     'core.GroupStateUpdateTrigger': 'MemberUpdated',
