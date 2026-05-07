@@ -769,8 +769,25 @@ export default {
           showToast('Error while saving rule: ' + err)
         })
     },
-    duplicateRule() {
-      let ruleClone = cloneDeep(this.rule) // TODO: (Nad) Remove embedded source, and check for other cleanup
+    duplicateRule() { // TODO: (Nad) Block duplicate with sharedcontext
+      let ruleClone = cloneDeep(this.rule)
+      
+      // Remove embedded information that only applied to the original
+      const config = ruleClone.configuration
+      if (config) {
+        delete config.source
+        delete config.sourceType
+        delete config.sharedContext
+      }
+
+      // Remove embedded DSL context information
+      if (ruleClone.actions?.length == 1) {
+        const action = ruleClone.actions[0]
+        if (action.configuration?.script && action.configuration?.type === 'application/vnd.openhab.dsl.rule') {
+          action.configuration.script = action.configuration.script.replace(/^\/\/ context:[^\r\n]+$(?:\r\n|\r|\n)/m, '')
+        }
+      }
+
       ruleClone.name = (ruleClone.name || '') + ' copy'
       ruleClone.editable = true
       this.f7router.navigate(
@@ -1088,13 +1105,14 @@ export default {
     },
     /**
      * Determines if the module is "opaque" in that it doesn't actually execute the content of the module, but instead executes
-     * a referenced in-memory runnable method.
+     * a referenced in-memory runnable method, or that the code depends on a referenced in-memory object/context.
      *
      * @param module the module to evaluate
      */
     isOpaqueModule(module) {
       if (!module?.type) return false
       return (
+        (module.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true) ||
         module.type === 'jsr223.ScriptedAction' || module.type === 'jsr223.ScriptedCondition' || module.type === 'jsr223.ScriptedTrigger'
       )
     }
