@@ -2647,22 +2647,22 @@
                   "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" \u003cicon\u003e (Group1, Group2) [Tag1, Tag2] { channel\u003d\"binding:type:id:channelid\", namespace\u003d\"my value\" [param\u003d\"my param value\"] }"
                 }
               },
-              "text/vnd.openhab.dsl.sitemap": {
-                "schema": {
-                  "type": "string",
-                  "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
-                }
-              },
               "application/vnd.openhab.dsl.rule": {
                 "schema": {
                   "type": "string",
                   "example": "rule \"My Rule\"\nwhen\n    Time is noon\nthen\n    logInfo(\"Test\", \"MyRule is running\")\nend"
                 }
               },
+              "text/vnd.openhab.dsl.sitemap": {
+                "schema": {
+                  "type": "string",
+                  "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
+                }
+              },
               "application/yaml": {
                 "schema": {
                   "type": "string",
-                  "example": "version: 1\nthings:\n  binding:typeBridge:idBridge:\n    isBridge: true\n    label: Label bridge\n    location: Location bridge\n    config:\n      stringParam: my value\n  binding:type:idBridge:id:\n    bridge: binding:typeBridge:idBridge\n    label: Label thing\n    location: Location thing\n    config:\n      booleanParam: true\n      decimalParam: 2.5\nitems:\n  Group1:\n    type: Group\n    label: Label\n  Group2:\n    type: Group\n    group:\n      type: Switch\n      function: Or\n      parameters:\n        - \"ON\"\n        - \"OFF\"\n    label: Label\n  MyItem:\n    type: Switch\n    label: Label\n    icon: icon\n    groups:\n      - Group1\n      - Group2\n    tags:\n      - Tag1\n      - Tag2\n    channel: binding:type:idBridge:id:channelid\n    metadata:\n      namespace:\n        value: my value\n        config:\n          param: my param value\nrules:\n  MyRule:\n    label: Label\n    actions:\n      - config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"MyRule is running\")\n        type: Script\n    triggers:\n      - config:\n          itemName: MyItem\n        type: ItemReceivedCommand\nruleTemplates:\n  my-template:\n    label: My Template\n    description: Logs when an Item state changes to ON\n    configDescriptions:\n      sourceItem:\n        context: item\n        description: The source Item whose state to monitor\n        label: Source Item\n        required: false\n        type: TEXT\n        readOnly: false\n        multiple: false\n        advanced: false\n        verify: false\n        limitToOptions: true\n    actions:\n      - id: \"2\"\n        config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"{{sourceItem}} turned on\")\n        type: Script\n    triggers:\n      - id: \"1\"\n        config:\n          itemName: \"{{sourceItem}}\"\n          state: \"ON\"\n          previousState: \"OFF\"\n        type: ItemChanged"
+                  "example": "version: 1\nthings:\n  binding:typeBridge:idBridge:\n    isBridge: true\n    label: Label bridge\n    location: Location bridge\n    config:\n      stringParam: my value\n  binding:type:idBridge:id:\n    bridge: binding:typeBridge:idBridge\n    label: Label thing\n    location: Location thing\n    config:\n      booleanParam: true\n      decimalParam: 2.5\nitems:\n  Group1:\n    type: Group\n    label: Label\n  Group2:\n    type: Group\n    group:\n      type: Switch\n      function: Or\n      parameters:\n        - \"ON\"\n        - \"OFF\"\n    label: Label\n  MyItem:\n    type: Switch\n    label: Label\n    icon: icon\n    groups:\n      - Group1\n      - Group2\n    tags:\n      - Tag1\n      - Tag2\n    channel: binding:type:idBridge:id:channelid\n    metadata:\n      namespace:\n        value: my value\n        config:\n          param: my param value\nrules:\n  MyRule:\n    label: Label\n    actions:\n      - config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"MyRule is running\")\n        type: Script\n    triggers:\n      - config:\n          itemName: MyItem\n        type: ItemReceivedCommand\nruleTemplates:\n  my-template:\n    label: My Template\n    description: Logs when an Item state changes to ON\n    configDescriptions:\n      sourceItem:\n        context: item\n        description: The source Item whose state to monitor\n        label: Source Item\n        required: false\n        type: TEXT\n        readOnly: false\n        multiple: false\n        advanced: false\n        verify: false\n        limitToOptions: true\n    actions:\n      - id: \"2\"\n        config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"{{sourceItem}} turned on\")\n        type: Script\n    triggers:\n      - id: \"1\"\n        config:\n          itemName: \"{{sourceItem}}\"\n          state: \"ON\"\n          previousState: \"OFF\"\n        type: ItemChanged\nsitemaps:\n  MySitemap:\n    label: My Sitemap\n    widgets:\n      - type: Frame\n        widgets:\n          - type: Input\n            item: MyItem\n            label: My Input"
                 }
               }
             }
@@ -2896,11 +2896,14 @@
                   "type": "string",
                   "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
                 }
+              },
+              "application/yaml": {
+                "schema": {
+                  "type": "string",
+                  "example": "version: 1\nsitemaps:\n  MySitemap:\n    label: My Sitemap\n    widgets:\n      - type: Frame\n        widgets:\n          - type: Input\n            item: MyItem\n            label: My Input"
+                }
               }
             }
-          },
-          "400": {
-            "description": "Payload invalid."
           },
           "404": {
             "description": "One or more sitemaps not found in registry."
@@ -2997,22 +3000,22 @@
                 "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" \u003cicon\u003e (Group1, Group2) [Tag1, Tag2] { channel\u003d\"binding:type:id:channelid\", namespace\u003d\"my value\" [param\u003d\"my param value\"] }"
               }
             },
-            "text/vnd.openhab.dsl.sitemap": {
-              "schema": {
-                "type": "string",
-                "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
-              }
-            },
             "application/vnd.openhab.dsl.rule": {
               "schema": {
                 "type": "string",
                 "example": "rule \"My Rule\"\nwhen\n    Time is noon\nthen\n    logInfo(\"Test\", \"MyRule is running\")\nend"
               }
             },
+            "text/vnd.openhab.dsl.sitemap": {
+              "schema": {
+                "type": "string",
+                "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
+              }
+            },
             "application/yaml": {
               "schema": {
                 "type": "string",
-                "example": "version: 1\nthings:\n  binding:typeBridge:idBridge:\n    isBridge: true\n    label: Label bridge\n    location: Location bridge\n    config:\n      stringParam: my value\n  binding:type:idBridge:id:\n    bridge: binding:typeBridge:idBridge\n    label: Label thing\n    location: Location thing\n    config:\n      booleanParam: true\n      decimalParam: 2.5\nitems:\n  Group1:\n    type: Group\n    label: Label\n  Group2:\n    type: Group\n    group:\n      type: Switch\n      function: Or\n      parameters:\n        - \"ON\"\n        - \"OFF\"\n    label: Label\n  MyItem:\n    type: Switch\n    label: Label\n    icon: icon\n    groups:\n      - Group1\n      - Group2\n    tags:\n      - Tag1\n      - Tag2\n    channel: binding:type:idBridge:id:channelid\n    metadata:\n      namespace:\n        value: my value\n        config:\n          param: my param value\nrules:\n  MyRule:\n    label: Label\n    actions:\n      - config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"MyRule is running\")\n        type: Script\n    triggers:\n      - config:\n          itemName: MyItem\n        type: ItemReceivedCommand\nruleTemplates:\n  my-template:\n    label: My Template\n    description: Logs when an Item state changes to ON\n    configDescriptions:\n      sourceItem:\n        context: item\n        description: The source Item whose state to monitor\n        label: Source Item\n        required: false\n        type: TEXT\n        readOnly: false\n        multiple: false\n        advanced: false\n        verify: false\n        limitToOptions: true\n    actions:\n      - id: \"2\"\n        config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"{{sourceItem}} turned on\")\n        type: Script\n    triggers:\n      - id: \"1\"\n        config:\n          itemName: \"{{sourceItem}}\"\n          state: \"ON\"\n          previousState: \"OFF\"\n        type: ItemChanged"
+                "example": "version: 1\nthings:\n  binding:typeBridge:idBridge:\n    isBridge: true\n    label: Label bridge\n    location: Location bridge\n    config:\n      stringParam: my value\n  binding:type:idBridge:id:\n    bridge: binding:typeBridge:idBridge\n    label: Label thing\n    location: Location thing\n    config:\n      booleanParam: true\n      decimalParam: 2.5\nitems:\n  Group1:\n    type: Group\n    label: Label\n  Group2:\n    type: Group\n    group:\n      type: Switch\n      function: Or\n      parameters:\n        - \"ON\"\n        - \"OFF\"\n    label: Label\n  MyItem:\n    type: Switch\n    label: Label\n    icon: icon\n    groups:\n      - Group1\n      - Group2\n    tags:\n      - Tag1\n      - Tag2\n    channel: binding:type:idBridge:id:channelid\n    metadata:\n      namespace:\n        value: my value\n        config:\n          param: my param value\nrules:\n  MyRule:\n    label: Label\n    actions:\n      - config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"MyRule is running\")\n        type: Script\n    triggers:\n      - config:\n          itemName: MyItem\n        type: ItemReceivedCommand\nruleTemplates:\n  my-template:\n    label: My Template\n    description: Logs when an Item state changes to ON\n    configDescriptions:\n      sourceItem:\n        context: item\n        description: The source Item whose state to monitor\n        label: Source Item\n        required: false\n        type: TEXT\n        readOnly: false\n        multiple: false\n        advanced: false\n        verify: false\n        limitToOptions: true\n    actions:\n      - id: \"2\"\n        config:\n          type: DSL\n          script: |\n            logInfo(\"Test\", \"{{sourceItem}} turned on\")\n        type: Script\n    triggers:\n      - id: \"1\"\n        config:\n          itemName: \"{{sourceItem}}\"\n          state: \"ON\"\n          previousState: \"OFF\"\n        type: ItemChanged\nsitemaps:\n  MySitemap:\n    label: My Sitemap\n    widgets:\n      - type: Frame\n        widgets:\n          - type: Input\n            item: MyItem\n            label: My Input"
               }
             }
           },
@@ -4369,6 +4372,14 @@
         "operationId": "getItemDataFromPersistenceService",
         "parameters": [
           {
+            "name": "Accept-Language",
+            "in": "header",
+            "description": "language",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "serviceId",
             "in": "query",
             "description": "Id of the persistence service. If not provided the default service will be used",
@@ -4432,6 +4443,14 @@
             "name": "itemState",
             "in": "query",
             "description": "Adds the current Item state into the requested period (the Item state will be before or at the endtime)",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "displayState",
+            "in": "query",
+            "description": "If set to true, formatting from the state description is applied to the values. For QuantityType states, the value in the display unit as defined by the pattern, is returned.",
             "schema": {
               "type": "boolean"
             }
@@ -6063,6 +6082,69 @@
         ]
       }
     },
+    "/log": {
+      "get": {
+        "tags": ["log"],
+        "summary": "Returns the last logged frontend messages. The amount is limited to the 500 last entries.",
+        "operationId": "getLastLogMessagesForFrontend",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 500
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "default response",
+            "content": {
+              "application/json": {}
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["log"],
+        "summary": "Log a frontend log message to the backend.",
+        "operationId": "logMessageToBackend",
+        "requestBody": {
+          "description": "Severity is required and can be one of error, warn, info or debug, depending on activated severities which you can GET at /logLevels.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogMessage"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Your log severity is not supported."
+          }
+        }
+      }
+    },
+    "/log/levels": {
+      "get": {
+        "tags": ["log"],
+        "summary": "Get log severities, which are logged by the current logger settings.",
+        "operationId": "getLogLevels",
+        "responses": {
+          "200": {
+            "description": "This depends on the current log settings at the backend."
+          }
+        }
+      }
+    },
     "/sitemaps/events/subscribe": {
       "post": {
         "tags": ["sitemaps"],
@@ -6787,7 +6869,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RootUIComponent"
+                    "$ref": "#/components/schemas/EnrichedRootUIComponent"
                   }
                 }
               }
@@ -6824,7 +6906,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RootUIComponent"
+                  "$ref": "#/components/schemas/EnrichedRootUIComponent"
                 }
               }
             }
@@ -6866,7 +6948,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RootUIComponent"
+                  "$ref": "#/components/schemas/EnrichedRootUIComponent"
                 }
               }
             }
@@ -6913,13 +6995,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RootUIComponent"
+                  "$ref": "#/components/schemas/EnrichedRootUIComponent"
                 }
               }
             }
           },
           "404": {
             "description": "Component not found"
+          },
+          "405": {
+            "description": "Component is not editable."
           }
         },
         "security": [
@@ -6956,6 +7041,9 @@
           },
           "404": {
             "description": "Component not found"
+          },
+          "405": {
+            "description": "Component is not editable."
           }
         },
         "security": [
@@ -8040,13 +8128,13 @@
           "configuration": {
             "$ref": "#/components/schemas/Configuration"
           },
+          "label": {
+            "type": "string"
+          },
           "description": {
             "type": "string"
           },
           "typeUID": {
-            "type": "string"
-          },
-          "label": {
             "type": "string"
           }
         }
@@ -8077,6 +8165,9 @@
       "Template": {
         "type": "object",
         "properties": {
+          "label": {
+            "type": "string"
+          },
           "description": {
             "type": "string"
           },
@@ -8090,9 +8181,6 @@
           "visibility": {
             "type": "string",
             "enum": ["VISIBLE", "HIDDEN", "EXPERT"]
-          },
-          "label": {
-            "type": "string"
           },
           "uid": {
             "type": "string"
@@ -8709,9 +8797,6 @@
       "JsonArray": {
         "type": "object",
         "properties": {
-          "asString": {
-            "type": "string"
-          },
           "empty": {
             "type": "boolean"
           },
@@ -8730,20 +8815,11 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
           "asNumber": {
             "type": "number"
+          },
+          "asCharacter": {
+            "type": "string"
           },
           "asBigDecimal": {
             "type": "number"
@@ -8751,17 +8827,32 @@
           "asBigInteger": {
             "type": "integer"
           },
-          "asCharacter": {
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asString": {
             "type": "string"
           },
-          "jsonNull": {
-            "type": "boolean"
-          },
-          "jsonObject": {
-            "type": "boolean"
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
+          },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
           },
           "asJsonObject": {
             "$ref": "#/components/schemas/JsonObject"
@@ -8769,23 +8860,17 @@
           "jsonArray": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
-          "jsonPrimitive": {
+          "jsonObject": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
+          "jsonNull": {
+            "type": "boolean"
           }
         }
       },
       "JsonElement": {
         "type": "object",
         "properties": {
-          "asString": {
-            "type": "string"
-          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -8801,29 +8886,23 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "jsonNull": {
-            "type": "boolean"
-          },
-          "jsonObject": {
-            "type": "boolean"
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
           },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
           "asNumber": {
             "type": "number"
+          },
+          "asCharacter": {
+            "type": "string"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
           },
           "asBigDecimal": {
             "type": "number"
@@ -8834,29 +8913,35 @@
           "jsonArray": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
           "asBigInteger": {
             "type": "integer"
           },
-          "asCharacter": {
-            "type": "string"
-          },
-          "jsonPrimitive": {
+          "jsonObject": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "jsonNull": {
+            "type": "boolean"
+          },
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asString": {
+            "type": "string"
           }
         }
       },
       "JsonNull": {
         "type": "object",
         "properties": {
-          "asString": {
-            "type": "string"
-          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -8872,29 +8957,23 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "jsonNull": {
-            "type": "boolean"
-          },
-          "jsonObject": {
-            "type": "boolean"
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
           },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
           "asNumber": {
             "type": "number"
+          },
+          "asCharacter": {
+            "type": "string"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
           },
           "asBigDecimal": {
             "type": "number"
@@ -8905,20 +8984,29 @@
           "jsonArray": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
           "asBigInteger": {
             "type": "integer"
           },
-          "asCharacter": {
-            "type": "string"
-          },
-          "jsonPrimitive": {
+          "jsonObject": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "jsonNull": {
+            "type": "boolean"
+          },
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asString": {
+            "type": "string"
           }
         }
       },
@@ -8928,9 +9016,6 @@
           "empty": {
             "type": "boolean"
           },
-          "asString": {
-            "type": "string"
-          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -8946,29 +9031,23 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "jsonNull": {
-            "type": "boolean"
-          },
-          "jsonObject": {
-            "type": "boolean"
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
           },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
           "asNumber": {
             "type": "number"
+          },
+          "asCharacter": {
+            "type": "string"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
           },
           "asBigDecimal": {
             "type": "number"
@@ -8979,29 +9058,35 @@
           "jsonArray": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
           "asBigInteger": {
             "type": "integer"
           },
-          "asCharacter": {
-            "type": "string"
-          },
-          "jsonPrimitive": {
+          "jsonObject": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "jsonNull": {
+            "type": "boolean"
+          },
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asString": {
+            "type": "string"
           }
         }
       },
       "JsonPrimitive": {
         "type": "object",
         "properties": {
-          "asString": {
-            "type": "string"
-          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -9017,29 +9102,11 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "boolean": {
-            "type": "boolean"
-          },
-          "number": {
-            "type": "boolean"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "string": {
-            "type": "boolean"
-          },
           "asNumber": {
             "type": "number"
+          },
+          "asCharacter": {
+            "type": "string"
           },
           "asBigDecimal": {
             "type": "number"
@@ -9047,17 +9114,41 @@
           "asBigInteger": {
             "type": "integer"
           },
-          "asCharacter": {
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "number": {
+            "type": "boolean"
+          },
+          "string": {
+            "type": "boolean"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "boolean": {
+            "type": "boolean"
+          },
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asString": {
             "type": "string"
           },
-          "jsonNull": {
-            "type": "boolean"
-          },
-          "jsonObject": {
-            "type": "boolean"
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
+          },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
           },
           "asJsonObject": {
             "$ref": "#/components/schemas/JsonObject"
@@ -9065,14 +9156,11 @@
           "jsonArray": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
-          "jsonPrimitive": {
+          "jsonObject": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
+          "jsonNull": {
+            "type": "boolean"
           }
         }
       },
@@ -9326,28 +9414,6 @@
           }
         }
       },
-      "SitemapButtonDefinition": {
-        "type": "object",
-        "properties": {
-          "row": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "column": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "command": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          },
-          "icon": {
-            "type": "string"
-          }
-        }
-      },
       "SitemapCondition": {
         "type": "object",
         "properties": {
@@ -9540,12 +9606,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SitemapRule"
-            }
-          },
-          "buttons": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SitemapButtonDefinition"
             }
           }
         }
@@ -9952,6 +10012,10 @@
           },
           "datapoints": {
             "type": "string"
+          },
+          "unit": {
+            "type": "string",
+            "description": "The unit for the returned values (if available)"
           },
           "data": {
             "type": "array",
@@ -10698,6 +10762,25 @@
           }
         }
       },
+      "LogMessage": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "url"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
       "SitemapPage": {
         "type": "object",
         "properties": {
@@ -10940,6 +11023,59 @@
           }
         }
       },
+      "EnrichedRootUIComponent": {
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "slots": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/UIComponent"
+              }
+            }
+          },
+          "uid": {
+            "type": "string"
+          },
+          "tags": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "props": {
+            "$ref": "#/components/schemas/ConfigDescription"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "editable": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UIComponent": {
+        "type": "object",
+        "properties": {
+          "component": {
+            "type": "string"
+          },
+          "config": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
       "RootUIComponent": {
         "type": "object",
         "properties": {
@@ -10975,18 +11111,6 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "UIComponent": {
-        "type": "object",
-        "properties": {
-          "component": {
-            "type": "string"
-          },
-          "config": {
-            "type": "object",
-            "additionalProperties": true
           }
         }
       },

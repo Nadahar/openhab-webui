@@ -139,9 +139,9 @@ export type RuleStatusInfo = {
 export type Module = {
     id: string;
     configuration: Configuration;
+    label: string;
     description: string;
     typeUID: string;
-    label: string;
 };
 
 export type Configuration = {
@@ -158,9 +158,9 @@ export type RuleExecution = {
 };
 
 export type Template = {
+    label: string;
     description: string;
     visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
-    label: string;
     uid: string;
 };
 
@@ -378,123 +378,123 @@ export type SerializabilityResults = {
 };
 
 export type JsonArray = {
-    asString: string;
     empty: boolean;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asFloat: number;
-    asShort: number;
-    asByte: string;
     asNumber: number;
+    asCharacter: string;
     asBigDecimal: number;
     asBigInteger: number;
-    asCharacter: string;
-    jsonNull: boolean;
-    jsonObject: boolean;
-    asJsonNull: JsonNull;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
+    asShort: number;
+    asFloat: number;
+    asByte: string;
+    asString: string;
     asJsonArray: JsonArray;
+    asJsonNull: JsonNull;
     jsonPrimitive: boolean;
     asJsonPrimitive: JsonPrimitive;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    jsonObject: boolean;
+    jsonNull: boolean;
 };
 
 export type JsonElement = {
-    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asFloat: number;
-    asShort: number;
-    asByte: string;
-    jsonNull: boolean;
-    jsonObject: boolean;
+    asJsonArray: JsonArray;
     asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
     asNumber: number;
+    asCharacter: string;
+    asJsonPrimitive: JsonPrimitive;
     asBigDecimal: number;
     asJsonObject: JsonObject;
     jsonArray: boolean;
-    asJsonArray: JsonArray;
     asBigInteger: number;
-    asCharacter: string;
-    jsonPrimitive: boolean;
-    asJsonPrimitive: JsonPrimitive;
+    jsonObject: boolean;
+    asShort: number;
+    asFloat: number;
+    jsonNull: boolean;
+    asByte: string;
+    asString: string;
 };
 
 export type JsonNull = {
-    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asFloat: number;
-    asShort: number;
-    asByte: string;
-    jsonNull: boolean;
-    jsonObject: boolean;
+    asJsonArray: JsonArray;
     asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
     asNumber: number;
+    asCharacter: string;
+    asJsonPrimitive: JsonPrimitive;
     asBigDecimal: number;
     asJsonObject: JsonObject;
     jsonArray: boolean;
-    asJsonArray: JsonArray;
     asBigInteger: number;
-    asCharacter: string;
-    jsonPrimitive: boolean;
-    asJsonPrimitive: JsonPrimitive;
+    jsonObject: boolean;
+    asShort: number;
+    asFloat: number;
+    jsonNull: boolean;
+    asByte: string;
+    asString: string;
 };
 
 export type JsonObject = {
     empty: boolean;
-    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asFloat: number;
-    asShort: number;
-    asByte: string;
-    jsonNull: boolean;
-    jsonObject: boolean;
+    asJsonArray: JsonArray;
     asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
     asNumber: number;
+    asCharacter: string;
+    asJsonPrimitive: JsonPrimitive;
     asBigDecimal: number;
     asJsonObject: JsonObject;
     jsonArray: boolean;
-    asJsonArray: JsonArray;
     asBigInteger: number;
-    asCharacter: string;
-    jsonPrimitive: boolean;
-    asJsonPrimitive: JsonPrimitive;
+    jsonObject: boolean;
+    asShort: number;
+    asFloat: number;
+    jsonNull: boolean;
+    asByte: string;
+    asString: string;
 };
 
 export type JsonPrimitive = {
-    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asFloat: number;
-    asShort: number;
-    boolean: boolean;
-    number: boolean;
-    asByte: string;
-    string: boolean;
     asNumber: number;
+    asCharacter: string;
     asBigDecimal: number;
     asBigInteger: number;
-    asCharacter: string;
-    jsonNull: boolean;
-    jsonObject: boolean;
-    asJsonNull: JsonNull;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
+    asShort: number;
+    number: boolean;
+    string: boolean;
+    asFloat: number;
+    boolean: boolean;
+    asByte: string;
+    asString: string;
     asJsonArray: JsonArray;
+    asJsonNull: JsonNull;
     jsonPrimitive: boolean;
     asJsonPrimitive: JsonPrimitive;
+    asJsonObject: JsonObject;
+    jsonArray: boolean;
+    jsonObject: boolean;
+    jsonNull: boolean;
 };
 
 export type StringList = Array<string>;
@@ -577,14 +577,6 @@ export type RuleTemplateDto = {
     triggers: Array<Trigger>;
     conditions: Array<Condition>;
     actions: Array<Action>;
-};
-
-export type SitemapButtonDefinition = {
-    row: number;
-    column: number;
-    command: string;
-    label: string;
-    icon: string;
 };
 
 export type SitemapCondition = {
@@ -1052,6 +1044,13 @@ export type UoMInfo = {
 
 export type UoMInfoBean = {
     uomInfo: UoMInfo;
+};
+
+export type LogMessage = {
+    timestamp: number;
+    severity: string;
+    url: string;
+    message: string;
 };
 
 export type SitemapPage = {
@@ -5389,6 +5388,60 @@ export type GetUoMInformationResponses = {
 };
 
 export type GetUoMInformationResponse = GetUoMInformationResponses[keyof GetUoMInformationResponses];
+
+export type GetLastLogMessagesForFrontendData = {
+    body?: never;
+    path?: never;
+    query?: {
+        limit?: number;
+    };
+    url: '/log';
+};
+
+export type GetLastLogMessagesForFrontendResponses = {
+    /**
+     * default response
+     */
+    default: unknown;
+};
+
+export type LogMessageToBackendData = {
+    /**
+     * Severity is required and can be one of error, warn, info or debug, depending on activated severities which you can GET at /logLevels.
+     */
+    body?: LogMessage;
+    path?: never;
+    query?: never;
+    url: '/log';
+};
+
+export type LogMessageToBackendErrors = {
+    /**
+     * Your log severity is not supported.
+     */
+    403: unknown;
+};
+
+export type LogMessageToBackendResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type GetLogLevelsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/log/levels';
+};
+
+export type GetLogLevelsResponses = {
+    /**
+     * This depends on the current log settings at the backend.
+     */
+    200: unknown;
+};
 
 export type CreateSitemapEventSubscriptionData = {
     body?: never;
