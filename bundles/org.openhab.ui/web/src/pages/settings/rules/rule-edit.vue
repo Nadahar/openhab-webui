@@ -684,12 +684,12 @@ export default {
         }
 
         if (yaml) {
-          // "source", "sourceType" and "sharedContext" should only exist for read-only rules, so they should never get here.
-          // If they do, they will be stripped from the rule unless "showAll" is enabled, which would be confusing to the user, 
+          // "source" and "sourceType" should only exist for read-only rules, so they should never get here. If they do,
+          // they will be stripped from the rule unless "showAll" is enabled, which would be confusing to the user, 
           // so let's make sure they don't get here by throwing an error if they do.
           const updatedConfigKeys = Object.keys(updatedRule.configuration || {})
-          if (updatedConfigKeys.includes('source') || updatedConfigKeys.includes('sourceType') || updatedConfigKeys.includes('sharedContext')) {
-            throw new Error(`Invalid configuration key ${updatedConfigKeys.find(key => ['source', 'sourceType', 'sharedContext'].includes(key))} found.`)
+          if (updatedConfigKeys.includes('source') || updatedConfigKeys.includes('sourceType')) {
+            throw new Error(`Invalid configuration key ${updatedConfigKeys.find(key => ['source', 'sourceType'].includes(key))} found.`)
           }
           if (!fastDeepEqual(updatedRule.configuration, this.rule.configuration)) this.rule.configuration = updatedRule.configuration
         }
@@ -787,7 +787,7 @@ export default {
           showToast('Error while saving rule: ' + err)
         })
     },
-    duplicateRule() { // TODO: (Nad) Block duplicate with sharedcontext
+    duplicateRule() {
       let ruleClone = cloneDeep(this.rule)
       
       // Remove embedded information that only applied to the original
@@ -795,7 +795,6 @@ export default {
       if (config) {
         delete config.source
         delete config.sourceType
-        delete config.sharedContext
       }
 
       // Remove embedded DSL context information
@@ -803,6 +802,7 @@ export default {
         const action = ruleClone.actions[0]
         if (action.configuration?.script && action.configuration?.type === 'application/vnd.openhab.dsl.rule') {
           action.configuration.script = action.configuration.script.replace(/^\/\/ context:[^\r\n]+$(?:\r\n|\r|\n)/m, '')
+          delete action.configuration.sharedContext
         }
       }
 
@@ -1130,7 +1130,7 @@ export default {
     isOpaqueModule(module) {
       if (!module?.type) return false
       return (
-        (module.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true) ||
+        (module.type === 'script.ScriptAction' && module.configuration?.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true) ||
         module.type === 'jsr223.ScriptedAction' || module.type === 'jsr223.ScriptedCondition' || module.type === 'jsr223.ScriptedTrigger'
       )
     }
@@ -1180,7 +1180,7 @@ export default {
     opaqueModulesType() {
       const modules = this.opaqueModules
       if (!modules || !modules.length) return undefined
-      // "Opaque modules" implies that the rule is created through JSR223.
+      // "Opaque modules" implies that the rule is created programmatically.
       // The assumption is therefore that all opaque module types are of the same type/scripting language.
       return modules.find((m) => m.configuration?.type)?.configuration?.type
     },
