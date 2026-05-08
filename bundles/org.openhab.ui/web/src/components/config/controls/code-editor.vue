@@ -262,12 +262,13 @@ export default {
      * @param {function} onSuccessCallback - Optional. A callback function to call when the code has been parsed
      * @param {function} onFailureCallback - Optional. A callback function to call when parsing fails or no object is found
      * @param {Object} params - Optional. Additional parameters for the parsing request
+     * @returns A Promise
      */
     parseCode(onSuccessCallback, onFailureCallback, params = {}) {
       let sourceMediaType = this.mediaTypes[this.uiOptionsStore.codeEditorType]
       sourceMediaType = sourceMediaType.split('+')[0] // remove the +thing, +item or +rule suffix, if present
       const targetMediaType = MediaType.JSON
-      this.$oh.api
+      return this.$oh.api
         .request({
           method: 'POST',
           url: '/rest/file-format/parse',
@@ -284,11 +285,13 @@ export default {
             if (onSuccessCallback) {
               onSuccessCallback()
             }
+            return Promise.resolve()
           } else {
             if (onFailureCallback) {
               onFailureCallback()
             }
             f7.dialog.alert(`Error parsing ${this.uiOptionsStore.codeEditorType}: no ${this.objectType} found`).open()
+            return Promise.reject()
           }
         })
         .catch((err) => {
@@ -321,6 +324,7 @@ export default {
           } else {
             f7.dialog.alert(`Error parsing ${this.uiOptionsStore.codeEditorType}: ${err.message || err.status}`).open()
           }
+          return Promise.reject()
         })
     },
     onEditorInput(value) {

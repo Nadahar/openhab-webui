@@ -449,6 +449,13 @@ export default {
       },
       deep: true
     },
+    savedRule: function() {
+      let ruleClone = cloneDeep(this.rule)
+      delete ruleClone.status
+      delete this.savedRule.status
+
+      this.ruleDirty = !fastDeepEqual(ruleClone, this.savedRule)
+    },
     ruleDirty: function () {
       this.dirty = this.ruleDirty || this.codeDirty
     },
@@ -712,12 +719,20 @@ export default {
 
     //   useThingEditStore().save(saveThing)
     // },
-    save(noToast) { // TODO: (Nad) Make
-      if (!this.isEditable) return Promise.reject()
-      if (this.currentTab === 'code') {
-        if (!this.fromYaml()) { // TODO: (Nad) Fix
-          return Promise.reject()
+    async save(noToast) { // TODO: (Nad) Make
+      if (!this.ready || !this.isEditable) return Promise.reject()
+      if (this.currentTab === 'code' && this.codeDirty) {
+        const editor = this.$refs.codeEditor
+        try {
+          await editor.parseCode(undefined, undefined,
+            { editorType: this.uiOptionsStore.codeEditorType, showAll: editor.isShowAll }
+          )
+        } catch (e) {
+            this.currentTab = 'code'
+            f7.tab.show('#code')
+            throw e
         }
+        this.codeDirty = false
       }
       if (!this.rule.uid) {
         f7.dialog.alert('Please provide a unique rule UID.', 'UID required').open()
@@ -740,9 +755,10 @@ export default {
         : this.$oh.api.put('/rest/rules/' + this.rule.uid, this.rule)
       return promise
         .then((data) => {
-          this.dirty = false
           if (this.createMode) {
-            showToast('Rule created')
+            if (!noToast) {
+              showToast('Rule created')
+            }
             this.f7router.navigate(
               this.f7route.url
                 .replace('/add', '/' + this.rule.uid)
@@ -752,7 +768,9 @@ export default {
             )
             this.load()
           } else if (this.stubMode) {
-            showToast('Rule regenerated')
+            if (!noToast) {
+              showToast('Rule generated')
+            }
             this.f7router.navigate(this.f7route.url.replace('/stub', '/' + this.rule.uid).replace('/schedule/', '/rules/'), {
               reloadCurrent: true
             })
