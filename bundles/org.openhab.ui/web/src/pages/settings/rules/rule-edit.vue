@@ -25,7 +25,7 @@
         Code
       </f7-link>
       <f7-link v-if="hasSource" @click="switchTab('source')" :tab-link-active="currentTab === 'source' ? true : null" tab-link="#source">
-        Source
+        {{ sourceTypeText }} Source
       </f7-link>
     </f7-toolbar>
     <f7-tabs class="sitemap-editor-tabs">
@@ -580,7 +580,7 @@ export default {
             rules: [this.rule]
           }
         }),
-        canSerializeRules({ // TODO: (Nad) Figure out how to handle empty DSL
+        canSerializeRules({
           targetFormat: 'application/vnd.openhab.dsl.rule',
           body: {
             rules: [this.rule]
@@ -712,7 +712,7 @@ export default {
 
     //   useThingEditStore().save(saveThing)
     // },
-    save(noToast) {
+    save(noToast) { // TODO: (Nad) Make
       if (!this.isEditable) return Promise.reject()
       if (this.currentTab === 'code') {
         if (!this.fromYaml()) { // TODO: (Nad) Fix
@@ -1195,7 +1195,7 @@ export default {
     },
     sourceTypeText() {
       const result = this.sourceType
-      return result ? AUTOMATION_LANGUAGES[result]?.name || result : result
+      return result ? AUTOMATION_LANGUAGES[result]?.shortName || result : result
     },
     sourceType() {
       const sourceContainer = this.sourceSource
