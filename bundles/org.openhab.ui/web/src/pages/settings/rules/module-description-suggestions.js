@@ -110,7 +110,7 @@ export default {
           return 'play "' + config.sound + '"'
         case 'script.ScriptAction':
           if (config && config.type === 'application/vnd.openhab.dsl.rule' && config.sharedContext === true) {
-            return 'Execute an inline script with shared context (opaque)'
+            return moduleType.label + ' with shared context'
           }
           return moduleType.label
         // conditions
