@@ -264,7 +264,7 @@
           </f7-col>
           <f7-col v-if="!createMode && !stubMode">
             <f7-list>
-              <f7-list-button v-if="isEditable || !hasOpaqueModule" color="blue" @click="duplicateRule"> Duplicate Rule </f7-list-button>
+              <f7-list-button v-if="isEditable || (!hasOpaqueModule && !hasSharedContextModule)" color="blue" @click="duplicateRule"> Duplicate Rule </f7-list-button>
               <f7-list-button v-if="isEditable" color="red" @click="deleteRule"> Delete Rule </f7-list-button>
             </f7-list>
           </f7-col>
@@ -1129,10 +1129,17 @@ export default {
      */
     isOpaqueModule(module) {
       if (!module?.type) return false
-      return (
-        (module.type === 'script.ScriptAction' && module.configuration?.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true) ||
-        module.type === 'jsr223.ScriptedAction' || module.type === 'jsr223.ScriptedCondition' || module.type === 'jsr223.ScriptedTrigger'
-      )
+      return module.type === 'jsr223.ScriptedAction' || module.type === 'jsr223.ScriptedCondition' || module.type === 'jsr223.ScriptedTrigger'
+    },
+    /**
+     * Determines if a module relies on shared context without being "opaque", that is, it's possible to show the script, but it won't 
+     * work without an "invisible" context that can't be shown.
+     *
+     * @param module the module to evaluate
+     */
+    moduleHasSharedContext(module) {
+      if (!module?.type) return false
+      return module.type === 'script.ScriptAction' && module.configuration?.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true
     }
   },
   computed: {
@@ -1187,6 +1194,13 @@ export default {
     opaqueModules() {
       if (!this.rule) return []
       return [...(this.rule.actions || []), this.rule.triggers || [], this.rule.conditions || []].filter((m) => this.isOpaqueModule(m))
+    },
+    hasSharedContextModule() {
+      return this.sharedContextModules.length > 0
+    },
+    sharedContextModules() {
+      if (!this.rule) return []
+      return [...(this.rule.actions || []), this.rule.triggers || [], this.rule.conditions || []].filter((m) => this.moduleHasSharedContext(m))
     },
     hasSource() {
       const sourceContainer = this.sourceSource
