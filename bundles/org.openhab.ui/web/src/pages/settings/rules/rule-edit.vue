@@ -14,7 +14,7 @@
         :f7router />
     </f7-navbar>
     <f7-toolbar v-if="ready" tabbar position="top">
-      <f7-link @click="switchTab('design', fromYaml)" :tab-link-active="currentTab === 'design' ? true : null" tab-link="#design">
+      <f7-link @click="switchTab('design')" :tab-link-active="currentTab === 'design' ? true : null" tab-link="#design">
         Design
       </f7-link>
       <f7-link
@@ -270,17 +270,6 @@
           </f7-col>
         </f7-block>
       </f7-tab>
-      <!-- <f7-tab id="code" :tab-active="currentTab === 'code'">
-        <editor
-          v-if="currentTab === 'code'"
-          class="rule-code-editor"
-          mode="application/vnd.openhab.rule+yaml"
-          :value="ruleYaml"
-          :readOnly="!isEditable"
-          @input="onEditorInput"
-          @save="save()" /> -->
-        <!-- <pre class="yaml-message padding-horizontal" :class="[yamlError === 'OK' ? 'text-color-green' : 'text-color-red']">{{yamlError}}</pre> -->
-      <!--/f7-tab-->
       <f7-tab v-if="ready && hasCode && rule" id="code" :tab-active="currentTab === 'code' ? true : null">
         <!-- v-if="ready" ensures that thingType and channelTypes are populated TODO: Fix this -->
         <code-editor
@@ -331,7 +320,7 @@
         </code-editor>
       </f7-tab>
       <f7-tab v-if="ready && hasSource" id="source" :tab-active="currentTab === 'source'">
-        <editor v-if="currentTab === 'source'" class="rule-source-viewer" :mode="sourceType" :value="source" :readOnly="true" />
+        <editor v-if="currentTab === 'source'" class="rule-source-viewer" :mode="sourceType" :value="source" :readOnly="true" readOnlyMsg="Source code is not editable"/>
       </f7-tab>
     </f7-tabs>
   </f7-page>
@@ -360,11 +349,6 @@
   position absolute
   height calc(100% - var(--f7-navbar-height) - var(--f7-toolbar-height))
   width 100%
-.yaml-message
-  display block
-  position absolute
-  top 80%
-  white-space pre-wrap
 </style>
 
 <script>
@@ -372,7 +356,6 @@ import { nextTick, defineAsyncComponent } from 'vue'
 import { f7, theme } from 'framework7-vue'
 import { mapStores } from 'pinia'
 
-import YAML from 'yaml'
 import cloneDeep from 'lodash/cloneDeep'
 import fastDeepEqual from 'fast-deep-equal/es6'
 
@@ -429,7 +412,6 @@ export default {
 
       rule: {},
       savedRule: {},
-      ruleYaml: '',
       moduleTypes: {
         actions: [],
         conditions: [],
@@ -729,26 +711,7 @@ export default {
         return false
       }
     },
-    // save(saveThing) {
-    //   if (!this.ready || !this.editable) return
-
-    //   if (this.currentTab === 'code' && this.codeDirty) {
-    //     this.$refs.codeEditor.parseCode(() => {
-    //       this.codeDirty = false
-    //       useThingEditStore().save(saveThing)
-    //       this.$refs.codeEditor.generateCode()
-    //     })
-    //     return
-    //   }
-
-    //   if (this.$refs.thingConfiguration && !this.$refs.thingConfiguration.isValid()) {
-    //     f7.dialog.alert('Please review the configuration and correct validation errors')
-    //     return
-    //   }
-
-    //   useThingEditStore().save(saveThing)
-    // },
-    async save(noToast) { // TODO: (Nad) Make
+    async save(noToast) {
       if (!this.ready || !this.isEditable) return Promise.reject()
       if (this.currentTab === 'code' && this.codeDirty) {
         const editor = this.$refs.codeEditor
@@ -1110,45 +1073,6 @@ export default {
       updatePromise.then(() => {
         this.f7router.navigate('/settings/rules/' + this.rule.uid + '/script/' + mod.id, { transition: theme.aurora ? 'f7-cover-v' : '' })
       })
-    },
-    toYaml() {
-      this.ruleYaml = YAML.stringify(
-        {
-          configuration: this.rule.configuration,
-          triggers: this.rule.triggers,
-          conditions: this.rule.conditions,
-          actions: this.rule.actions
-        },
-        this.isEditable ? undefined : this.replacer
-      )
-    },
-    fromYaml() { // TODO: (Nad) Remove
-      if (!this.isEditable || !this.ruleYaml) return
-      try {
-        const updatedRule = YAML.parse(this.ruleYaml)
-        this.rule.configuration = updatedRule.configuration
-        this.rule.triggers = updatedRule.triggers
-        this.rule.conditions = updatedRule.conditions
-        this.rule.actions = updatedRule.actions
-        return true
-      } catch (e) {
-        f7.dialog.alert(e).open()
-        return false
-      }
-    },
-    /**
-     * Replaces CRLF (Windows) or CR (Mac) with LF in scripts before YAMLification.
-     *
-     * @param key the key being processed
-     * @param value the value being processed
-     */
-    replacer(key, value) { // TODO: (Nad) Remove
-      switch (key) {
-        case 'script':
-          return value ? value.replaceAll(/(\r\n|\r)/g, '\n') : value
-        default:
-          return value
-      }
     },
     /**
      * Determines if the module is "opaque" in that it doesn't actually execute the content of the module, but instead executes
