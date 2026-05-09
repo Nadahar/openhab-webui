@@ -313,7 +313,7 @@
             </f7-button>
             <f7-button
               :color="rule.status.status === 'IDLE' ? 'blue' : 'gray'"
-              :tooltip="`Run rule ${rule.uid} now${($device.desktop ? ' (Ctrl-R)' : '')}`"
+              :tooltip="`Run '${rule.name}' now${($device.desktop ? ' (Ctrl-R)' : '')}`"
               icon-ios="f7:play_round"
               icon-md="f7:play_round"
               icon-aurora="f7:play_round"
@@ -326,7 +326,7 @@
               class="display-flex flex-direction-row"
               :text="rule.status.status"
               :color="ruleStatusBadgeColor(rule.status)"
-              :tooltip="`Rule ${rule.uid} is ${rule.status.status ? rule.status.status.toLocaleLowerCase() : 'unknown'}`" />
+              :tooltip="`Rule '${rule.name}' is ${rule.status.status ? rule.status.status.toLocaleLowerCase() : 'unknown'}`" />
           </template>
         </code-editor>
       </f7-tab>
