@@ -269,7 +269,9 @@
                 v-if="!error"
                 color="blue"
                 title="Copy File Definition"
-                @click="openFileDefinitionPopover(undefined, $event)" />
+                @click="popupOpened = !popupOpened" />
+                <!-- @click="copyRuleDefinitionToClipboard(rule)" /-->
+                <!-- @click="openFileDefinitionPopover(undefined, $event)" />-->
                 <!--@click="copyFileDefinitionToClipboard(ObjectType.RULE, [rule.uid])" /-->
               <f7-list-button v-if="isEditable" color="red" @click="deleteRule"> Delete Rule </f7-list-button>
             </f7-list>
@@ -346,10 +348,114 @@
         </f7-list-item>
       </f7-list>
     </f7-popover>
+
+    <f7-popup 
+      v-model:opened="popupOpened" 
+      class="custom-dialog-popup"
+      backdrop
+      closeOnEscape
+    >
+      <div class="popup-content-wrapper">
+        <f7-block-title>Copy Rule File Definition</f7-block-title>
+        <f7-block>
+          <p>Select the format to copy to clipboard</p>
+          
+          <div class="button-stack">
+            <f7-button
+              fill
+              large
+              :color="canDSL ? 'teal' : 'red'"
+              :tooltip="canDSL ? 'Click to copy DSL to clipboard.' : 'Can\'t generate DSL. Click to see why.'"
+              @click="handleDSL">
+              DSL
+            </f7-button>
+            <f7-button
+              v-if="!canYAML" 
+              fill
+              large
+              color="red"
+              tooltip="Can't generate YAML. Click to see why."
+              @click="showYamlErrors">
+              YAML
+            </f7-button>
+            <f7-button
+              v-if="canYAML" 
+              fill
+              large
+              color="blue"
+              :tooltip="showYamlExportOptions ? 'Click to hide YAML options.' : 'Click to show YAML options.'"
+              @click="showYamlExportOptions = !showYamlExportOptions">
+              YAML{{ showYamlExportOptions ? ' ▲' : ' ▼' }}
+            </f7-button>
+            <div v-if="showYamlExportOptions" class="yaml-sub-menu">
+              <f7-button
+                fill
+                color="blue"
+                tooltip="Empty collections and normally irrelevant elements are omitted"
+                @click="handleYAML('Standard')">
+                Normal
+              </f7-button>
+              <f7-button
+                fill
+                color="blue"
+                tooltip="Empty collections and normally irrelevant elements are included"
+                @click="handleYAML('Kubernetes')">
+                With All Details
+              </f7-button>
+              <f7-button
+                fill
+                color="blue"
+                tooltip="Only the configured template parameters are included, which will generate an identical rule"
+                @click="handleYAML('Kubernetes')">
+                Rule Stub Only
+              </f7-button>
+              <f7-button
+                fill
+                color="blue"
+                tooltip="The template and configured parameters are removed, the resulting rule is identical but fully independent from the template"
+                @click="handleYAML('Kubernetes')">
+                Stripped Of Template
+              </f7-button>
+            </div>
+            <f7-button fill large @click="popupOpened = false" color="gray">Cancel</f7-button>
+          </div>
+        </f7-block>
+      </div>
+    </f7-popup>
   </f7-page>
 </template>
 
 <style lang="stylus">
+.popup 
+  @media (min-width: 630px) and (min-height: 630px)
+    &.custom-dialog-popup
+      width 90%
+      max-width 450px
+      height auto
+      max-height 80vh
+      top 50%
+      left 50%
+      overflow-y auto
+      margin 0
+      transition-property transform, margin-left, top
+      .block-title
+        font-size calc(var(--f7-block-title-font-size) + 3px)
+      &.modal-in
+        transform translate3d(-50%, -50%, 0)
+
+    .button-stack
+      display flex
+      flex-direction column
+      gap 10px
+
+    .yaml-sub-menu
+      display flex
+      flex-direction column
+      gap 8px
+      padding 10px
+      background rgba(0,0,0,0.05)
+      border-radius 8px
+
 #file-definition-popover
   .list-button
     color var(--f7-list-bg-color)
@@ -470,6 +576,9 @@ export default {
 
       canYAML: false,
       canDSL: false,
+
+      popupOpened: false,
+      showYamlExportOptions: false,
 
       emptyMediaTypeTemplates: {
         'application/vnd.openhab.dsl.rule': () => {
