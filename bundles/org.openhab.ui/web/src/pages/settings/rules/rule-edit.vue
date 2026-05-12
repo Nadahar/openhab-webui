@@ -266,7 +266,7 @@
             <f7-list>
               <f7-list-button v-if="isEditable || (!hasOpaqueModule && !hasSharedContextModule)" color="blue" @click="duplicateRule"> Duplicate Rule </f7-list-button>
               <f7-list-button
-                v-if="!error"
+                v-if="!hasOpaqueModule"
                 color="blue"
                 title="Copy File Definition"
                 @click="popupOpened = !popupOpened" />
@@ -365,7 +365,7 @@
               fill
               large
               :color="canDSL ? 'teal' : 'red'"
-              :tooltip="canDSL ? 'Click to copy DSL to clipboard.' : 'Can\'t generate DSL. Click to see why.'"
+              :tooltip="canDSL ? 'Copy DSL to clipboard.' : 'Can\'t generate DSL. Click to see why.'"
               @click="handleDSL">
               DSL
             </f7-button>
@@ -383,7 +383,7 @@
               fill
               large
               color="blue"
-              :tooltip="showYamlExportOptions ? 'Click to hide YAML options.' : 'Click to show YAML options.'"
+              :tooltip="showYamlExportOptions ? 'Hide YAML options.' : 'Show YAML options.'"
               @click="showYamlExportOptions = !showYamlExportOptions">
               YAML{{ showYamlExportOptions ? ' ▲' : ' ▼' }}
             </f7-button>
@@ -426,22 +426,14 @@
 </template>
 
 <style lang="stylus">
-.popup 
-  @media (min-width: 630px) and (min-height: 630px)
+.dark
+  .popup
     &.custom-dialog-popup
-      width 90%
-      max-width 450px
-      height auto
-      max-height 80vh
-      top 50%
-      left 50%
-      overflow-y auto
-      margin 0
-      transition-property transform, margin-left, top
-      .block-title
-        font-size calc(var(--f7-block-title-font-size) + 3px)
-      &.modal-in
-        transform translate3d(-50%, -50%, 0)
+      .yaml-sub-menu
+        background #fff3
+
+.popup
+  &.custom-dialog-popup
 
     .button-stack
       display flex
@@ -453,8 +445,23 @@
       flex-direction column
       gap 8px
       padding 10px
-      background rgba(0,0,0,0.05)
-      border-radius 8px
+      background #0001 
+
+    @media (min-width: 630px) and (min-height: 630px)
+      &.custom-dialog-popup
+        width 90%
+        max-width 450px
+        height auto
+        max-height 80vh
+        top 50%
+        left 50%
+        overflow-y auto
+        margin 0
+        transition-property transform, margin-left, top
+        .block-title
+          font-size calc(var(--f7-block-title-font-size) + 3px)
+        &.modal-in
+          transform translate3d(-50%, -50%, 0)
 
 #file-definition-popover
   .list-button
