@@ -271,7 +271,6 @@
                 title="Copy File Definition"
                 @click="popupOpened = !popupOpened" />
                 <!-- @click="copyRuleDefinitionToClipboard(rule)" /-->
-                <!-- @click="openFileDefinitionPopover(undefined, $event)" />-->
                 <!--@click="copyFileDefinitionToClipboard(ObjectType.RULE, [rule.uid])" /-->
               <f7-list-button v-if="isEditable" color="red" @click="deleteRule"> Delete Rule </f7-list-button>
             </f7-list>
@@ -331,23 +330,6 @@
         <editor v-if="currentTab === 'source'" class="rule-source-viewer" :mode="sourceType" :value="source" :readOnly="true" readOnlyMsg="Source code is not editable"/>
       </f7-tab>
     </f7-tabs>
-
-    <f7-popover id="file-definition-popover">
-      <f7-list>
-        <f7-list-button color="red" @click="something"> DSL </f7-list-button>
-        <f7-list-button v-if="false && (isEditable || (!hasOpaqueModule && !hasSharedContextModule))" color="blue" @click="somethingelse"> YAML </f7-list-button>
-        <f7-list-item accordion-item color="blue" @click="something" title="YAML">
-          <f7-accordion-content>
-            <f7-list>
-              <f7-list-button color="blue" @click="something"> Normal </f7-list-button>
-              <f7-list-button color="blue" @click="something"> With All Details </f7-list-button>
-              <f7-list-button color="blue" @click="something"> Rule Stub Only </f7-list-button>
-              <f7-list-button color="blue" @click="something"> Stripped Of Template </f7-list-button>
-            </f7-list>
-          </f7-accordion-content>
-        </f7-list-item>
-      </f7-list>
-    </f7-popover>
 
     <f7-popup 
       v-model:opened="popupOpened" 
@@ -465,17 +447,6 @@
         &.modal-in
           transform translate3d(-50%, -50%, 0)
 
-#file-definition-popover
-  .list-button
-    color var(--f7-list-bg-color)
-    background var(--f7-theme-color)
-  .accordion-item
-    text-align var(--f7-list-button-text-align)
-    color var(--f7-list-bg-color)
-    background var(--f7-theme-color)
-    .item-inner
-      position absolute
-      justify-content center
 .enable-toggle
   vertical-align inherit
 .moduleconfig-popup
@@ -1245,17 +1216,6 @@ export default {
     moduleHasSharedContext(module) {
       if (!module?.type) return false
       return module.type === 'script.ScriptAction' && module.configuration?.type === 'application/vnd.openhab.dsl.rule' && module.configuration?.sharedContext === true
-    },
-    openFileDefinitionPopover(index, event) {
-      //this.currentHighlightColorItemIndex = index
-      //this.currentHighlightColor = this.highlightFilters[index].color
-      f7.popover.open('#file-definition-popover', event.target)
-    },
-    closeFileDefinitionPopover(color) {
-      f7.popover.close('#file-definition-popover')
-      // if (color !== null) {
-      //   this.highlightFilters[this.currentHighlightColorItemIndex].color = color
-      // }
     },
     handleYAML(param) {
       // TODO: (Nad) Make
