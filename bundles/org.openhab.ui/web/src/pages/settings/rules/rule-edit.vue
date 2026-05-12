@@ -391,28 +391,30 @@
               <f7-button
                 fill
                 color="blue"
-                tooltip="Empty collections and normally irrelevant elements are omitted"
+                tooltip="Copy YAML, where empty collections and normally irrelevant elements are omitted, to clipboard"
                 @click="handleYAML('Standard')">
                 Normal
               </f7-button>
               <f7-button
                 fill
                 color="blue"
-                tooltip="Empty collections and normally irrelevant elements are included"
+                tooltip="Copy YAML, where empty collections and normally irrelevant elements are included, to clipboard"
                 @click="handleYAML('Kubernetes')">
                 With All Details
               </f7-button>
               <f7-button
+                v-if="rule.templateUID && Object.keys(rule.configuration).length > 0"
                 fill
                 color="blue"
-                tooltip="Only the configured template parameters are included, which will generate an identical rule"
+                tooltip="Copy YAML, where only the template and the configured template parameters are included, to clipboard"
                 @click="handleYAML('Kubernetes')">
                 Rule Stub Only
               </f7-button>
               <f7-button
+                v-if="rule.templateUID && rule.templateState === 'instantiated'"
                 fill
                 color="blue"
-                tooltip="The template and configured parameters are removed, the resulting rule is identical but fully independent from the template"
+                tooltip="Copy YAML, where the template and the configured parameters are removed, resulting in an indentical but fully independent rule, to clipboard"
                 @click="handleYAML('Kubernetes')">
                 Stripped Of Template
               </f7-button>
@@ -1255,6 +1257,9 @@ export default {
       //   this.highlightFilters[this.currentHighlightColorItemIndex].color = color
       // }
     },
+    handleYAML(param) {
+      // TODO: (Nad) Make
+    }
   },
   computed: {
     pageTitle() {
