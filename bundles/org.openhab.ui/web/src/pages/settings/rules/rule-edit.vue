@@ -285,7 +285,7 @@
           :read-only="!isEditable"
           :read-only-msg="notEditableMsg"
           :valid-media-types="validMediaTypes"
-          :opt-show-all-media-types="['application/yaml+rule']"
+          :opt-show-all-media-types="stubMode ? [] : ['application/yaml+rule']"
           :is-object-empty="isEmpty"
           :empty-media-type-templates="emptyMediaTypeTemplates"
           :post-parse-callback="() => { return this.resolveEditorTypes() }"
@@ -293,7 +293,7 @@
           @save="save()"
           @parsed="updateRule"
           @changed="onCodeChanged">
-          <template #additional-panel-controls>
+          <template v-if="!createMode && !stubMode" #additional-panel-controls>
             <f7-button
               :color="rule.status.statusDetail === 'DISABLED' ? 'orange' : 'gray'"
               :tooltip="(rule.status.statusDetail === 'DISABLED' ? 'Enable rule' : 'Disable rule') + ($device.desktop ? ' (Ctrl-D)' : '')"
@@ -698,6 +698,11 @@ export default {
               this.f7router.back()
             }
             this.currentTemplate = template
+            this.canYAML = true
+            this.yamlErrors = undefined
+            this.canDSL = false
+            this.dslErrors = undefined
+
             loadingFinished()
           })
           // no need for an event source, we're going to overwrite the existing rule
@@ -917,6 +922,7 @@ export default {
             if (!noToast) {
               showToast('Rule created')
             }
+            this.dirty = this.ruleDirty = this.codeDirty = false
             this.f7router.navigate(
               this.f7route.url
                 .replace('/add', '/' + this.rule.uid)
@@ -929,6 +935,7 @@ export default {
             if (!noToast) {
               showToast('Rule generated')
             }
+            this.dirty = this.ruleDirty = this.codeDirty = false
             this.f7router.navigate(this.f7route.url.replace('/stub', '/' + this.rule.uid).replace('/schedule/', '/rules/'), {
               reloadCurrent: true
             })
