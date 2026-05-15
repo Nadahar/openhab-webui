@@ -498,7 +498,7 @@ import FileDefinition from '@/pages/settings/file-definition-mixin'
 import { useUIOptionsStore } from '@/js/stores/useUIOptionsStore'
 import { showToast } from '@/js/dialog-promises'
 import { useDirty } from '@/pages/useDirty'
-import { canSerializeRules, createFileFormatForRules } from '@/api'
+import { canSerializeRules, create } from '@/api'
 import copyToClipboard from '@/js/clipboard'
 
 const UID_REGEX = new RegExp('^' + RULE_UID_PATTERN + '$')
@@ -1273,10 +1273,12 @@ export default {
       }
       const mediaType = type === 'DSL' ? 'application/vnd.openhab.dsl.rule' : 'application/yaml'
       const progressDialog = f7.dialog.progress(`Loading '${this.rule.name}' ${type || 'YAML'} definition...`)
-      createFileFormatForRules(
+      create(
         {
           serializationOption: serializationOption || undefined,
-          body: [this.rule.uid]
+          fileFormat: {
+            rules: [this.rule]
+          }
         },
         {
           parseAs: 'text',
