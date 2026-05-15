@@ -1,5 +1,5 @@
 import { CompletionContext, insertCompletionText, type Completion, type CompletionResult } from '@codemirror/autocomplete'
-import { findParent, lineIndent, findRootSection } from './yaml-utils'
+import { findParent, lineIndent, findRootSection, isConfig } from './yaml-utils'
 import { completionStart, hintItems, hintParameterValues, hintParameters } from './hint-utils'
 import type { Line } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
@@ -7,6 +7,7 @@ import type { EditorView } from '@codemirror/view'
 import * as api from '@/api'
 
 let moduleTypesCache: { [section: string]: api.ModuleType[] | null } = {}
+let templatesCache: api.RuleTemplateDto[] = []
 
 async function getModuleTypes(section: string) {
   if (moduleTypesCache[section]) return moduleTypesCache[section]
@@ -21,6 +22,16 @@ async function getModuleTypes(section: string) {
   return []
 }
 
+async function getTemplates() {
+  if (templatesCache?.length) return [...templatesCache]
+
+  const result = await api.getTemplates()
+  if (result) {
+    templatesCache = result
+    return [...templatesCache]
+  }
+}
+
 function findModuleType(context: CompletionContext, arrayElementLine: Line) {
   if (!arrayElementLine) return null
   const arrayIndent = lineIndent(arrayElementLine, true)
@@ -30,6 +41,24 @@ function findModuleType(context: CompletionContext, arrayElementLine: Line) {
     if (indent < arrayIndent) break
     if (indent > arrayIndent) continue
     const match = line.text.match(/^(?: {8}| {6}- )type:\s*(\w+)\s*$/)
+    if (match && match.length === 2) {
+      return match[1]
+    }
+  }
+  return null
+}
+
+function getTemplate(context: CompletionContext, grandParentLine: Line) {
+  if (!grandParentLine) return null
+
+  const rulePropsIndent = lineIndent(grandParentLine, true) + 2
+  const regex = new RegExp(`^ {${rulePropsIndent}}(?:template|templateUID):\\s*(\\S+)\\s*$`, "i"); 
+  for (let l = grandParentLine.number + 1; l <= context.state.doc.lines; l++) {
+    const line = context.state.doc.line(l)
+    const indent = lineIndent(line, true)
+    if (indent < rulePropsIndent) break
+    if (indent > rulePropsIndent) continue
+    const match = line.text.match(regex)
     if (match && match.length === 2) {
       return match[1]
     }
@@ -434,6 +463,17 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
           return hintModuleElementStructure(context, line, parentLine)
         }
         return hintModuleStructure(context, line, parentLine)
+      } else if (isConfig(parentLine)) {
+        // Rule configuration
+        const templateUid = getTemplate(context, grandParentLine)
+        if (templateUid) {
+          if (!afterColon) {
+
+
+            console.log('Is config, template', templateUid)
+
+          }
+        }
       }
     } else if (grandParentLine) {
       if (parentIndent === 6) {
