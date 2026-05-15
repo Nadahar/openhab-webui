@@ -269,7 +269,7 @@
                 v-if="!hasOpaqueModule"
                 color="blue"
                 title="Copy File Definition"
-                @click="popupOpened = !popupOpened" />
+                @click="copyPopupOpened = !copyPopupOpened" />
               <f7-list-button v-if="isEditable" color="red" @click="deleteRule"> Delete Rule </f7-list-button>
             </f7-list>
           </f7-col>
@@ -329,8 +329,8 @@
     </f7-tabs>
 
     <f7-popup 
-      v-model:opened="popupOpened" 
-      class="export-definition-popup"
+      v-model:opened="copyPopupOpened" 
+      class="copy-definition-popup"
       backdrop
       closeOnEscape>
       <div class="popup-content-wrapper">
@@ -394,7 +394,7 @@
               <f7-block-title small>YAML problems:</f7-block-title>
               {{ yamlErrors }}
             </f7-block>
-            <f7-button fill large @click="popupOpened = false" color="gray">Cancel</f7-button>
+            <f7-button fill large @click="copyPopupOpened = false" color="gray">Cancel</f7-button>
           </div>
         </f7-block>
       </div>
@@ -405,12 +405,12 @@
 <style lang="stylus">
 .dark
   .popup
-    &.export-definition-popup
+    &.copy-definition-popup
       .yaml-sub-menu
         background #fff3
 
 .popup
-  &.export-definition-popup
+  &.copy-definition-popup
 
     @media (min-width: 630px) and (min-height: 630px)
       width 90%
@@ -508,7 +508,7 @@ export default {
   components: {
     RuleGeneralSettings,
     ConfigSheet,
-    editor: defineAsyncComponent(() => import(/* webpackChunkName: "script-editor" */ '@/components/config/controls/script-editor.vue')), // TODO: (Nad) Remove?
+    editor: defineAsyncComponent(() => import(/* webpackChunkName: "script-editor" */ '@/components/config/controls/script-editor.vue')),
     CodeEditor: defineAsyncComponent(() => import(/* webpackChunkName: "code-editor" */ '@/components/config/controls/code-editor.vue'))
   },
   props: {
@@ -562,7 +562,7 @@ export default {
       currentTemplate: null,
       ruleDirty: false,
       codeDirty: false,
-      notEditableMsg: 'This rule is read-only.', // TODO: (Nad) rule/script/scene
+      notEditableMsg: 'This rule is read-only.',
       uidPattern: RULE_UID_PATTERN,
 
       canYAML: false,
@@ -570,7 +570,7 @@ export default {
       canDSL: false,
       dslErrors: undefined,
 
-      popupOpened: false,
+      copyPopupOpened: false,
       showYamlExportOptions: false,
       showYamlErrors: false,
       showDslErrors: false,
@@ -778,7 +778,7 @@ export default {
         } else {
           this.canDSL = false
           this.dslErrors = undefined
-          console.warn('Failed to check YAML serialization support, received an empty result')
+          console.warn('Failed to check DSL serialization support, received an empty result')
         }
       } else {
         this.canDSL = false
@@ -1289,12 +1289,12 @@ export default {
             f7.dialog.alert(`Error copying rule ${type || 'YAML'} definition to the clipboard`, 'Error')
           }
         })
-        this.popupOpened = false
+        this.copyPopupOpened = false
       }).catch((error) => {
         progressDialog.close()
         console.error('Failed to generate rule definiton', error)
         f7.dialog.alert(`Error loading rule ${type || 'YAML'} definition: ${error}`, 'Error')
-        this.popupOpened = false
+        this.copyPopupOpened = false
       })
     },
     exportDslClicked() {
