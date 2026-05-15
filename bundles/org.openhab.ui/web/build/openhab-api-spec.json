@@ -957,7 +957,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RuleTemplate"
+                    "$ref": "#/components/schemas/RuleTemplateDTO"
                   }
                 }
               }
@@ -996,7 +996,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RuleTemplate"
+                  "$ref": "#/components/schemas/RuleTemplateDTO"
                 }
               }
             }
@@ -8162,11 +8162,34 @@
           }
         }
       },
-      "RuleTemplate": {
+      "RuleTemplateDTO": {
         "type": "object",
         "properties": {
+          "label": {
+            "type": "string"
+          },
           "uid": {
             "type": "string"
+          },
+          "tags": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": ["VISIBLE", "HIDDEN", "EXPERT"]
+          },
+          "configDescriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigDescriptionParameter"
+            }
           },
           "triggers": {
             "type": "array",
@@ -8184,29 +8207,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Action"
-            }
-          },
-          "tags": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "label": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "visibility": {
-            "type": "string",
-            "enum": ["VISIBLE", "HIDDEN", "EXPERT"]
-          },
-          "configurationDescriptions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConfigDescriptionParameter"
             }
           }
         }
@@ -9386,55 +9386,6 @@
           },
           "editable": {
             "type": "boolean"
-          }
-        }
-      },
-      "RuleTemplateDTO": {
-        "type": "object",
-        "properties": {
-          "label": {
-            "type": "string"
-          },
-          "uid": {
-            "type": "string"
-          },
-          "tags": {
-            "uniqueItems": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "description": {
-            "type": "string"
-          },
-          "visibility": {
-            "type": "string",
-            "enum": ["VISIBLE", "HIDDEN", "EXPERT"]
-          },
-          "configDescriptions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ConfigDescriptionParameter"
-            }
-          },
-          "triggers": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Trigger"
-            }
-          },
-          "conditions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Condition"
-            }
-          },
-          "actions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Action"
-            }
           }
         }
       },

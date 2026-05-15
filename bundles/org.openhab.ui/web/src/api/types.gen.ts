@@ -157,16 +157,16 @@ export type RuleExecution = {
     rule: Rule;
 };
 
-export type RuleTemplate = {
+export type RuleTemplateDto = {
+    label: string;
     uid: string;
+    tags: Array<string>;
+    description: string;
+    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
+    configDescriptions: Array<ConfigDescriptionParameter>;
     triggers: Array<Trigger>;
     conditions: Array<Condition>;
     actions: Array<Action>;
-    tags: Array<string>;
-    label: string;
-    description: string;
-    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
-    configurationDescriptions: Array<ConfigDescriptionParameter>;
 };
 
 export type Input = {
@@ -570,18 +570,6 @@ export type Metadata = {
         };
     };
     editable: boolean;
-};
-
-export type RuleTemplateDto = {
-    label: string;
-    uid: string;
-    tags: Array<string>;
-    description: string;
-    visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
-    configDescriptions: Array<ConfigDescriptionParameter>;
-    triggers: Array<Trigger>;
-    conditions: Array<Condition>;
-    actions: Array<Action>;
 };
 
 export type SitemapCondition = {
@@ -1854,7 +1842,7 @@ export type GetTemplatesResponses = {
     /**
      * OK
      */
-    200: Array<RuleTemplate>;
+    200: Array<RuleTemplateDto>;
 };
 
 export type GetTemplatesResponse = GetTemplatesResponses[keyof GetTemplatesResponses];
@@ -1888,7 +1876,7 @@ export type GetTemplateByIdResponses = {
     /**
      * OK
      */
-    200: RuleTemplate;
+    200: RuleTemplateDto;
 };
 
 export type GetTemplateByIdResponse = GetTemplateByIdResponses[keyof GetTemplateByIdResponses];
