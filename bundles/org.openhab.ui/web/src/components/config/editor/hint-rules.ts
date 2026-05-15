@@ -7,7 +7,7 @@ import type { EditorView } from '@codemirror/view'
 import * as api from '@/api'
 
 let moduleTypesCache: { [section: string]: api.ModuleType[] | null } = {}
-let templatesCache: api.RuleTemplateDto[] = []
+let templatesCache: api.RuleTemplate[] = []
 
 async function getModuleTypes(section: string) {
   if (moduleTypesCache[section]) return moduleTypesCache[section]
@@ -30,6 +30,7 @@ async function getTemplates() {
     templatesCache = result
     return [...templatesCache]
   }
+  return []
 }
 
 function findModuleType(context: CompletionContext, arrayElementLine: Line) {
@@ -48,7 +49,7 @@ function findModuleType(context: CompletionContext, arrayElementLine: Line) {
   return null
 }
 
-function getTemplate(context: CompletionContext, grandParentLine: Line) {
+function getTemplate(context: CompletionContext, grandParentLine: Line): String | null {
   if (!grandParentLine) return null
 
   const rulePropsIndent = lineIndent(grandParentLine, true) + 2
@@ -78,6 +79,39 @@ function applyAliasToMimeType(section: string, completionResult: CompletionResul
     }
   })  
   return completionResult
+}
+
+async function hintTemplateConfig(context: CompletionContext, templateUid: String, line: Line): Promise<CompletionResult | null> {
+  const templates = await getTemplates()
+  const template = templates.find((t) => t.uid === templateUid)
+  if (!template) {
+    return null
+  }
+
+  const cursor = context.pos - line.from
+  const colonPos = line.text.indexOf(':')
+  const afterColon = colonPos > 0 && cursor > colonPos
+  const parameters = template.configDescriptions
+
+  if (afterColon) {
+      const result = hintParameterValues(context, parameters, line, colonPos)
+      if (result) {
+        return result
+      }
+      const parameterName = line.text.substring(0, colonPos).trim()
+      // if (result && parameterName === 'type') {
+      //   if (result instanceof Promise) {
+      //     result.then((r) => {
+      //       applyAliasToMimeType(section, r)
+      //     })
+      //   } else {
+      //     applyAliasToMimeType(section, result)
+      //   }
+      // }
+      return result
+
+  }
+  return null
 }
 
 function hintModuleConfig(context: CompletionContext, line: Line, parentLine: Line, grandParentLine: Line): CompletionResult | Promise<CompletionResult | null> | null {
@@ -467,12 +501,7 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
         // Rule configuration
         const templateUid = getTemplate(context, grandParentLine)
         if (templateUid) {
-          if (!afterColon) {
-
-
-            console.log('Is config, template', templateUid)
-
-          }
+          return hintTemplateConfig(context, templateUid, line)
         }
       }
     } else if (grandParentLine) {
