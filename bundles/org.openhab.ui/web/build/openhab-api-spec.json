@@ -201,11 +201,11 @@
               }
             }
           },
-          "409": {
-            "description": "Creation of the rule is refused. Rule with the same UID already exists."
-          },
           "400": {
             "description": "Creation of the rule is refused. Missing required parameter."
+          },
+          "409": {
+            "description": "Creation of the rule is refused. Rule with the same UID already exists."
           }
         },
         "security": [
@@ -529,7 +529,7 @@
     "/rules/{ruleUID}/{moduleCategory}/{id}": {
       "get": {
         "tags": ["rules"],
-        "summary": "Gets the rule\u0027s module corresponding to the given Category and ID.",
+        "summary": "Gets the rule's module corresponding to the given Category and ID.",
         "operationId": "getRuleModuleById",
         "parameters": [
           {
@@ -585,7 +585,7 @@
     "/rules/{ruleUID}/{moduleCategory}/{id}/config": {
       "get": {
         "tags": ["rules"],
-        "summary": "Gets the module\u0027s configuration.",
+        "summary": "Gets the module's configuration.",
         "operationId": "getRuleModuleConfig",
         "parameters": [
           {
@@ -641,7 +641,7 @@
     "/rules/{ruleUID}/{moduleCategory}/{id}/config/{param}": {
       "get": {
         "tags": ["rules"],
-        "summary": "Gets the module\u0027s configuration parameter.",
+        "summary": "Gets the module's configuration parameter.",
         "operationId": "getRuleModuleConfigParameter",
         "parameters": [
           {
@@ -704,7 +704,7 @@
       },
       "put": {
         "tags": ["rules"],
-        "summary": "Sets the module\u0027s configuration parameter value.",
+        "summary": "Sets the module's configuration parameter value.",
         "operationId": "setRuleModuleConfigParameter",
         "parameters": [
           {
@@ -889,13 +889,13 @@
     "/rules/schedule/simulations": {
       "get": {
         "tags": ["rules"],
-        "summary": "Simulates the executions of rules filtered by tag \u0027Schedule\u0027 within the given times.",
+        "summary": "Simulates the executions of rules filtered by tag 'Schedule' within the given times.",
         "operationId": "getScheduleRuleSimulations",
         "parameters": [
           {
             "name": "from",
             "in": "query",
-            "description": "Start time of the simulated rule executions. Will default to the current time. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "Start time of the simulated rule executions. Will default to the current time. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "schema": {
               "type": "string"
             }
@@ -903,7 +903,7 @@
           {
             "name": "until",
             "in": "query",
-            "description": "End time of the simulated rule executions. Will default to 30 days after the start time. Must be less than 180 days after the given start time. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "End time of the simulated rule executions. Will default to 30 days after the start time. Must be less than 180 days after the given start time. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "schema": {
               "type": "string"
             }
@@ -957,7 +957,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/Template"
+                    "$ref": "#/components/schemas/RuleTemplate"
                   }
                 }
               }
@@ -996,7 +996,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Template"
+                  "$ref": "#/components/schemas/RuleTemplate"
                 }
               }
             }
@@ -1025,7 +1025,7 @@
           {
             "name": "actionUid",
             "in": "path",
-            "description": "action type UID (including scope, separated by \u0027.\u0027)",
+            "description": "action type UID (including scope, separated by '.')",
             "required": true,
             "schema": {
               "pattern": "[a-zA-Z0-9]+(\\-[a-zA-Z0-9]+)?\\.[a-zA-Z0-9]+(%23[A-Fa-f0-9]+)?",
@@ -1923,7 +1923,7 @@
           {
             "name": "prefixes",
             "in": "query",
-            "description": "filter UIDs by prefix (multiple comma-separated prefixes allowed, for example: \u0027system,mqtt\u0027)",
+            "description": "filter UIDs by prefix (multiple comma-separated prefixes allowed, for example: 'system,mqtt')",
             "schema": {
               "type": "string"
             }
@@ -2461,8 +2461,8 @@
             "description": "Target format",
             "schema": {
               "type": "string",
-              "default": "application/yaml",
-              "enum": ["application/vnd.openhab.dsl.rule", "application/yaml"]
+              "enum": ["application/vnd.openhab.dsl.rule", "application/yaml"],
+              "default": "application/yaml"
             }
           }
         ],
@@ -2615,8 +2615,8 @@
             "description": "Decides what to include in serialized rules and rule templates",
             "schema": {
               "type": "string",
-              "default": "Normal",
-              "enum": ["Normal", "Include all", "Stub only", "Strip template"]
+              "enum": ["Normal", "Include all", "Stub only", "Strip template"],
+              "default": "Normal"
             }
           }
         ],
@@ -2638,13 +2638,13 @@
               "text/vnd.openhab.dsl.thing": {
                 "schema": {
                   "type": "string",
-                  "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam\u003d\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam\u003dtrue, decimalParam\u003d2.5]\n}"
+                  "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam=\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam=true, decimalParam=2.5]\n}"
                 }
               },
               "text/vnd.openhab.dsl.item": {
                 "schema": {
                   "type": "string",
-                  "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" \u003cicon\u003e (Group1, Group2) [Tag1, Tag2] { channel\u003d\"binding:type:id:channelid\", namespace\u003d\"my value\" [param\u003d\"my param value\"] }"
+                  "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" <icon> (Group1, Group2) [Tag1, Tag2] { channel=\"binding:type:id:channelid\", namespace=\"my value\" [param=\"my param value\"] }"
                 }
               },
               "application/vnd.openhab.dsl.rule": {
@@ -2656,7 +2656,7 @@
               "text/vnd.openhab.dsl.sitemap": {
                 "schema": {
                   "type": "string",
-                  "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
+                  "example": "sitemap MySitemap label=\"My Sitemap\" {\n    Frame {\n        Input item=MyItem label=\"My Input\"\n    }\n}"
                 }
               },
               "application/yaml": {
@@ -2720,7 +2720,7 @@
               "text/vnd.openhab.dsl.item": {
                 "schema": {
                   "type": "string",
-                  "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" \u003cicon\u003e (Group1, Group2) [Tag1, Tag2] { channel\u003d\"binding:type:id:channelid\", namespace\u003d\"my value\" [param\u003d\"my param value\"] }"
+                  "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" <icon> (Group1, Group2) [Tag1, Tag2] { channel=\"binding:type:id:channelid\", namespace=\"my value\" [param=\"my param value\"] }"
                 }
               },
               "application/yaml": {
@@ -2757,8 +2757,8 @@
             "description": "Decides what to include in serialized rule templates",
             "schema": {
               "type": "string",
-              "default": "Normal",
-              "enum": ["Normal", "Include all"]
+              "enum": ["Normal", "Include all"],
+              "default": "Normal"
             }
           }
         ],
@@ -2816,8 +2816,8 @@
             "description": "Decides what to include in serialized rules",
             "schema": {
               "type": "string",
-              "default": "Normal",
-              "enum": ["Normal", "Include all", "Stub only", "Strip template"]
+              "enum": ["Normal", "Include all", "Stub only", "Strip template"],
+              "default": "Normal"
             }
           }
         ],
@@ -2894,7 +2894,7 @@
               "text/vnd.openhab.dsl.sitemap": {
                 "schema": {
                   "type": "string",
-                  "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
+                  "example": "sitemap MySitemap label=\"My Sitemap\" {\n    Frame {\n        Input item=MyItem label=\"My Input\"\n    }\n}"
                 }
               },
               "application/yaml": {
@@ -2955,7 +2955,7 @@
               "text/vnd.openhab.dsl.thing": {
                 "schema": {
                   "type": "string",
-                  "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam\u003d\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam\u003dtrue, decimalParam\u003d2.5]\n}"
+                  "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam=\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam=true, decimalParam=2.5]\n}"
                 }
               },
               "application/yaml": {
@@ -2991,13 +2991,13 @@
             "text/vnd.openhab.dsl.thing": {
               "schema": {
                 "type": "string",
-                "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam\u003d\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam\u003dtrue, decimalParam\u003d2.5]\n}"
+                "example": "Bridge binding:typeBridge:idBridge \"Label bridge\" @ \"Location bridge\" [stringParam=\"my value\"] {\n    Thing type id \"Label thing\" @ \"Location thing\" [booleanParam=true, decimalParam=2.5]\n}"
               }
             },
             "text/vnd.openhab.dsl.item": {
               "schema": {
                 "type": "string",
-                "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" \u003cicon\u003e (Group1, Group2) [Tag1, Tag2] { channel\u003d\"binding:type:id:channelid\", namespace\u003d\"my value\" [param\u003d\"my param value\"] }"
+                "example": "Group Group1 \"Label\"\nGroup:Switch:OR(ON,OFF) Group2 \"Label\"\nSwitch MyItem \"Label\" <icon> (Group1, Group2) [Tag1, Tag2] { channel=\"binding:type:id:channelid\", namespace=\"my value\" [param=\"my param value\"] }"
               }
             },
             "application/vnd.openhab.dsl.rule": {
@@ -3009,7 +3009,7 @@
             "text/vnd.openhab.dsl.sitemap": {
               "schema": {
                 "type": "string",
-                "example": "sitemap MySitemap label\u003d\"My Sitemap\" {\n    Frame {\n        Input item\u003dMyItem label\u003d\"My Input\"\n    }\n}"
+                "example": "sitemap MySitemap label=\"My Sitemap\" {\n    Frame {\n        Input item=MyItem label=\"My Input\"\n    }\n}"
               }
             },
             "application/yaml": {
@@ -3523,11 +3523,11 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "Item not found"
-          },
           "400": {
             "description": "Command cannot be parsed"
+          },
+          "404": {
+            "description": "Item not found"
           }
         }
       },
@@ -3798,11 +3798,11 @@
           "202": {
             "description": "Accepted"
           },
-          "404": {
-            "description": "Item not found"
-          },
           "400": {
             "description": "State cannot be parsed"
+          },
+          "404": {
+            "description": "Item not found"
           }
         }
       }
@@ -4400,7 +4400,7 @@
           {
             "name": "starttime",
             "in": "query",
-            "description": "Start time of the data to return. Will default to 1 day before endtime. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "Start time of the data to return. Will default to 1 day before endtime. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "schema": {
               "type": "string"
             }
@@ -4408,7 +4408,7 @@
           {
             "name": "endtime",
             "in": "query",
-            "description": "End time of the data to return. Will default to current time. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "End time of the data to return. Will default to current time. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "schema": {
               "type": "string"
             }
@@ -4501,7 +4501,7 @@
           {
             "name": "time",
             "in": "query",
-            "description": "Time of the data to be stored. Will default to current time. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "Time of the data to be stored. Will default to current time. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "required": true,
             "schema": {
               "type": "string"
@@ -4561,7 +4561,7 @@
           {
             "name": "starttime",
             "in": "query",
-            "description": "Start of the time range to be deleted. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "Start of the time range to be deleted. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "required": true,
             "schema": {
               "type": "string"
@@ -4570,7 +4570,7 @@
           {
             "name": "endtime",
             "in": "query",
-            "description": "End of the time range to be deleted. [yyyy-MM-dd\u0027T\u0027HH:mm:ss.SSSZ]",
+            "description": "End of the time range to be deleted. [yyyy-MM-dd'T'HH:mm:ss.SSSZ]",
             "required": true,
             "schema": {
               "type": "string"
@@ -5519,7 +5519,7 @@
       },
       "delete": {
         "tags": ["things"],
-        "summary": "Removes a thing from the registry. Set \u0027force\u0027 to __true__ if you want the thing to be removed immediately.",
+        "summary": "Removes a thing from the registry. Set 'force' to __true__ if you want the thing to be removed immediately.",
         "operationId": "removeThingById",
         "parameters": [
           {
@@ -5560,7 +5560,7 @@
             "description": "Thing not found."
           },
           "409": {
-            "description": "Thing could not be deleted because it\u0027s not editable."
+            "description": "Thing could not be deleted because it's not editable."
           }
         },
         "security": [
@@ -5622,7 +5622,7 @@
     "/things/{thingUID}/firmware/status": {
       "get": {
         "tags": ["things"],
-        "summary": "Gets thing\u0027s firmware status.",
+        "summary": "Gets thing's firmware status.",
         "operationId": "getThingFirmwareStatus",
         "parameters": [
           {
@@ -5820,7 +5820,7 @@
     "/things/{thingUID}/config": {
       "put": {
         "tags": ["things"],
-        "summary": "Updates thing\u0027s configuration.",
+        "summary": "Updates thing's configuration.",
         "operationId": "updateThingConfig",
         "parameters": [
           {
@@ -6363,11 +6363,11 @@
               }
             }
           },
-          "404": {
-            "description": "Sitemap with requested name does not exist or page does not exist, or page refers to a non-linkable widget"
-          },
           "400": {
             "description": "Invalid subscription id has been provided."
+          },
+          "404": {
+            "description": "Sitemap with requested name does not exist or page does not exist, or page refers to a non-linkable widget"
           }
         }
       }
@@ -6424,11 +6424,11 @@
               }
             }
           },
-          "404": {
-            "description": "Sitemap with requested name does not exist"
-          },
           "400": {
             "description": "Invalid subscription id has been provided."
+          },
+          "404": {
+            "description": "Sitemap with requested name does not exist"
           }
         }
       }
@@ -7209,11 +7209,11 @@
               }
             }
           },
-          "404": {
-            "description": "No human language interpreter was found."
-          },
           "400": {
             "description": "interpretation exception occurs"
+          },
+          "404": {
+            "description": "No human language interpreter was found."
           }
         }
       }
@@ -7289,11 +7289,11 @@
               }
             }
           },
-          "404": {
-            "description": "No human language interpreter was found."
-          },
           "400": {
             "description": "interpretation exception occurs"
+          },
+          "404": {
+            "description": "No human language interpreter was found."
           }
         }
       }
@@ -7376,11 +7376,11 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "One of the given ids is wrong."
-          },
           "400": {
             "description": "Services are missing or language is not supported by services or dialog processing is already started for the audio source."
+          },
+          "404": {
+            "description": "One of the given ids is wrong."
           }
         }
       }
@@ -7525,11 +7525,11 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "One of the given ids is wrong."
-          },
           "400": {
             "description": "Services are missing or language is not supported by services or dialog processing is already started for the audio source."
+          },
+          "404": {
+            "description": "One of the given ids is wrong."
           }
         }
       }
@@ -7553,11 +7553,11 @@
           "200": {
             "description": "OK"
           },
-          "404": {
-            "description": "No audio source was found."
-          },
           "400": {
             "description": "No dialog processing is started for the audio source."
+          },
+          "404": {
+            "description": "No audio source was found."
           }
         }
       }
@@ -8122,14 +8122,14 @@
       "Module": {
         "type": "object",
         "properties": {
+          "label": {
+            "type": "string"
+          },
           "id": {
             "type": "string"
           },
           "configuration": {
             "$ref": "#/components/schemas/Configuration"
-          },
-          "label": {
-            "type": "string"
           },
           "description": {
             "type": "string"
@@ -8162,14 +8162,29 @@
           }
         }
       },
-      "Template": {
+      "RuleTemplate": {
         "type": "object",
         "properties": {
-          "label": {
+          "uid": {
             "type": "string"
           },
-          "description": {
-            "type": "string"
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
           },
           "tags": {
             "uniqueItems": true,
@@ -8178,12 +8193,21 @@
               "type": "string"
             }
           },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
           "visibility": {
             "type": "string",
             "enum": ["VISIBLE", "HIDDEN", "EXPERT"]
           },
-          "uid": {
-            "type": "string"
+          "configurationDescriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigDescriptionParameter"
+            }
           }
         }
       },
@@ -8797,6 +8821,9 @@
       "JsonArray": {
         "type": "object",
         "properties": {
+          "asString": {
+            "type": "string"
+          },
           "empty": {
             "type": "boolean"
           },
@@ -8815,11 +8842,23 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asNumber": {
-            "type": "number"
+          "asByte": {
+            "type": "string",
+            "format": "byte"
+          },
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
           },
           "asCharacter": {
             "type": "string"
+          },
+          "asNumber": {
+            "type": "number"
           },
           "asBigDecimal": {
             "type": "number"
@@ -8827,23 +8866,17 @@
           "asBigInteger": {
             "type": "integer"
           },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "asString": {
-            "type": "string"
+          "jsonNull": {
+            "type": "boolean"
           },
           "asJsonArray": {
             "$ref": "#/components/schemas/JsonArray"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
+          },
+          "jsonArray": {
+            "type": "boolean"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
@@ -8851,26 +8884,20 @@
           "jsonPrimitive": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
-          },
-          "asJsonObject": {
-            "$ref": "#/components/schemas/JsonObject"
-          },
-          "jsonArray": {
-            "type": "boolean"
-          },
           "jsonObject": {
             "type": "boolean"
           },
-          "jsonNull": {
-            "type": "boolean"
+          "asJsonObject": {
+            "$ref": "#/components/schemas/JsonObject"
           }
         }
       },
       "JsonElement": {
         "type": "object",
         "properties": {
+          "asString": {
+            "type": "string"
+          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -8886,47 +8913,6 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
-          "asJsonNull": {
-            "$ref": "#/components/schemas/JsonNull"
-          },
-          "jsonPrimitive": {
-            "type": "boolean"
-          },
-          "asNumber": {
-            "type": "number"
-          },
-          "asCharacter": {
-            "type": "string"
-          },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
-          },
-          "asBigDecimal": {
-            "type": "number"
-          },
-          "asJsonObject": {
-            "$ref": "#/components/schemas/JsonObject"
-          },
-          "jsonArray": {
-            "type": "boolean"
-          },
-          "asBigInteger": {
-            "type": "integer"
-          },
-          "jsonObject": {
-            "type": "boolean"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
           "jsonNull": {
             "type": "boolean"
           },
@@ -8934,14 +8920,55 @@
             "type": "string",
             "format": "byte"
           },
-          "asString": {
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asCharacter": {
             "type": "string"
+          },
+          "asNumber": {
+            "type": "number"
+          },
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
+          },
+          "jsonArray": {
+            "type": "boolean"
+          },
+          "asJsonNull": {
+            "$ref": "#/components/schemas/JsonNull"
+          },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
+          "asBigDecimal": {
+            "type": "number"
+          },
+          "jsonObject": {
+            "type": "boolean"
+          },
+          "asJsonObject": {
+            "$ref": "#/components/schemas/JsonObject"
+          },
+          "asBigInteger": {
+            "type": "integer"
           }
         }
       },
       "JsonNull": {
         "type": "object",
         "properties": {
+          "asString": {
+            "type": "string"
+          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -8957,47 +8984,6 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
-          "asJsonNull": {
-            "$ref": "#/components/schemas/JsonNull"
-          },
-          "jsonPrimitive": {
-            "type": "boolean"
-          },
-          "asNumber": {
-            "type": "number"
-          },
-          "asCharacter": {
-            "type": "string"
-          },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
-          },
-          "asBigDecimal": {
-            "type": "number"
-          },
-          "asJsonObject": {
-            "$ref": "#/components/schemas/JsonObject"
-          },
-          "jsonArray": {
-            "type": "boolean"
-          },
-          "asBigInteger": {
-            "type": "integer"
-          },
-          "jsonObject": {
-            "type": "boolean"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
           "jsonNull": {
             "type": "boolean"
           },
@@ -9005,8 +8991,46 @@
             "type": "string",
             "format": "byte"
           },
-          "asString": {
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asCharacter": {
             "type": "string"
+          },
+          "asNumber": {
+            "type": "number"
+          },
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
+          },
+          "jsonArray": {
+            "type": "boolean"
+          },
+          "asJsonNull": {
+            "$ref": "#/components/schemas/JsonNull"
+          },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
+          "asBigDecimal": {
+            "type": "number"
+          },
+          "jsonObject": {
+            "type": "boolean"
+          },
+          "asJsonObject": {
+            "$ref": "#/components/schemas/JsonObject"
+          },
+          "asBigInteger": {
+            "type": "integer"
           }
         }
       },
@@ -9016,6 +9040,9 @@
           "empty": {
             "type": "boolean"
           },
+          "asString": {
+            "type": "string"
+          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -9030,47 +9057,6 @@
           },
           "asBoolean": {
             "type": "boolean"
-          },
-          "asJsonArray": {
-            "$ref": "#/components/schemas/JsonArray"
-          },
-          "asJsonNull": {
-            "$ref": "#/components/schemas/JsonNull"
-          },
-          "jsonPrimitive": {
-            "type": "boolean"
-          },
-          "asNumber": {
-            "type": "number"
-          },
-          "asCharacter": {
-            "type": "string"
-          },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
-          },
-          "asBigDecimal": {
-            "type": "number"
-          },
-          "asJsonObject": {
-            "$ref": "#/components/schemas/JsonObject"
-          },
-          "jsonArray": {
-            "type": "boolean"
-          },
-          "asBigInteger": {
-            "type": "integer"
-          },
-          "jsonObject": {
-            "type": "boolean"
-          },
-          "asShort": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
           },
           "jsonNull": {
             "type": "boolean"
@@ -9079,14 +9065,55 @@
             "type": "string",
             "format": "byte"
           },
-          "asString": {
+          "asFloat": {
+            "type": "number",
+            "format": "float"
+          },
+          "asShort": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "asCharacter": {
             "type": "string"
+          },
+          "asNumber": {
+            "type": "number"
+          },
+          "asJsonArray": {
+            "$ref": "#/components/schemas/JsonArray"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
+          },
+          "jsonArray": {
+            "type": "boolean"
+          },
+          "asJsonNull": {
+            "$ref": "#/components/schemas/JsonNull"
+          },
+          "jsonPrimitive": {
+            "type": "boolean"
+          },
+          "asBigDecimal": {
+            "type": "number"
+          },
+          "jsonObject": {
+            "type": "boolean"
+          },
+          "asJsonObject": {
+            "$ref": "#/components/schemas/JsonObject"
+          },
+          "asBigInteger": {
+            "type": "integer"
           }
         }
       },
       "JsonPrimitive": {
         "type": "object",
         "properties": {
+          "asString": {
+            "type": "string"
+          },
           "asDouble": {
             "type": "number",
             "format": "double"
@@ -9102,17 +9129,13 @@
           "asBoolean": {
             "type": "boolean"
           },
-          "asNumber": {
-            "type": "number"
+          "asByte": {
+            "type": "string",
+            "format": "byte"
           },
-          "asCharacter": {
-            "type": "string"
-          },
-          "asBigDecimal": {
-            "type": "number"
-          },
-          "asBigInteger": {
-            "type": "integer"
+          "asFloat": {
+            "type": "number",
+            "format": "float"
           },
           "asShort": {
             "type": "integer",
@@ -9124,22 +9147,32 @@
           "string": {
             "type": "boolean"
           },
-          "asFloat": {
-            "type": "number",
-            "format": "float"
-          },
           "boolean": {
             "type": "boolean"
           },
-          "asByte": {
-            "type": "string",
-            "format": "byte"
-          },
-          "asString": {
+          "asCharacter": {
             "type": "string"
+          },
+          "asNumber": {
+            "type": "number"
+          },
+          "asBigDecimal": {
+            "type": "number"
+          },
+          "asBigInteger": {
+            "type": "integer"
+          },
+          "jsonNull": {
+            "type": "boolean"
           },
           "asJsonArray": {
             "$ref": "#/components/schemas/JsonArray"
+          },
+          "asJsonPrimitive": {
+            "$ref": "#/components/schemas/JsonPrimitive"
+          },
+          "jsonArray": {
+            "type": "boolean"
           },
           "asJsonNull": {
             "$ref": "#/components/schemas/JsonNull"
@@ -9147,20 +9180,11 @@
           "jsonPrimitive": {
             "type": "boolean"
           },
-          "asJsonPrimitive": {
-            "$ref": "#/components/schemas/JsonPrimitive"
-          },
-          "asJsonObject": {
-            "$ref": "#/components/schemas/JsonObject"
-          },
-          "jsonArray": {
-            "type": "boolean"
-          },
           "jsonObject": {
             "type": "boolean"
           },
-          "jsonNull": {
-            "type": "boolean"
+          "asJsonObject": {
+            "$ref": "#/components/schemas/JsonObject"
           }
         }
       },

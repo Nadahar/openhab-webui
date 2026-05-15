@@ -137,9 +137,9 @@ export type RuleStatusInfo = {
 };
 
 export type Module = {
+    label: string;
     id: string;
     configuration: Configuration;
-    label: string;
     description: string;
     typeUID: string;
 };
@@ -157,11 +157,16 @@ export type RuleExecution = {
     rule: Rule;
 };
 
-export type Template = {
+export type RuleTemplate = {
+    uid: string;
+    triggers: Array<Trigger>;
+    conditions: Array<Condition>;
+    actions: Array<Action>;
+    tags: Array<string>;
     label: string;
     description: string;
     visibility: 'VISIBLE' | 'HIDDEN' | 'EXPERT';
-    uid: string;
+    configurationDescriptions: Array<ConfigDescriptionParameter>;
 };
 
 export type Input = {
@@ -378,123 +383,123 @@ export type SerializabilityResults = {
 };
 
 export type JsonArray = {
+    asString: string;
     empty: boolean;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asNumber: number;
+    asByte: string;
+    asFloat: number;
+    asShort: number;
     asCharacter: string;
+    asNumber: number;
     asBigDecimal: number;
     asBigInteger: number;
-    asShort: number;
-    asFloat: number;
-    asByte: string;
-    asString: string;
+    jsonNull: boolean;
     asJsonArray: JsonArray;
+    asJsonPrimitive: JsonPrimitive;
+    jsonArray: boolean;
     asJsonNull: JsonNull;
     jsonPrimitive: boolean;
-    asJsonPrimitive: JsonPrimitive;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
     jsonObject: boolean;
-    jsonNull: boolean;
+    asJsonObject: JsonObject;
 };
 
 export type JsonElement = {
+    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asJsonArray: JsonArray;
-    asJsonNull: JsonNull;
-    jsonPrimitive: boolean;
-    asNumber: number;
-    asCharacter: string;
-    asJsonPrimitive: JsonPrimitive;
-    asBigDecimal: number;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
-    asBigInteger: number;
-    jsonObject: boolean;
-    asShort: number;
-    asFloat: number;
     jsonNull: boolean;
     asByte: string;
-    asString: string;
+    asFloat: number;
+    asShort: number;
+    asCharacter: string;
+    asNumber: number;
+    asJsonArray: JsonArray;
+    asJsonPrimitive: JsonPrimitive;
+    jsonArray: boolean;
+    asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
+    asBigDecimal: number;
+    jsonObject: boolean;
+    asJsonObject: JsonObject;
+    asBigInteger: number;
 };
 
 export type JsonNull = {
+    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asJsonArray: JsonArray;
-    asJsonNull: JsonNull;
-    jsonPrimitive: boolean;
-    asNumber: number;
-    asCharacter: string;
-    asJsonPrimitive: JsonPrimitive;
-    asBigDecimal: number;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
-    asBigInteger: number;
-    jsonObject: boolean;
-    asShort: number;
-    asFloat: number;
     jsonNull: boolean;
     asByte: string;
-    asString: string;
+    asFloat: number;
+    asShort: number;
+    asCharacter: string;
+    asNumber: number;
+    asJsonArray: JsonArray;
+    asJsonPrimitive: JsonPrimitive;
+    jsonArray: boolean;
+    asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
+    asBigDecimal: number;
+    jsonObject: boolean;
+    asJsonObject: JsonObject;
+    asBigInteger: number;
 };
 
 export type JsonObject = {
     empty: boolean;
+    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asJsonArray: JsonArray;
-    asJsonNull: JsonNull;
-    jsonPrimitive: boolean;
-    asNumber: number;
-    asCharacter: string;
-    asJsonPrimitive: JsonPrimitive;
-    asBigDecimal: number;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
-    asBigInteger: number;
-    jsonObject: boolean;
-    asShort: number;
-    asFloat: number;
     jsonNull: boolean;
     asByte: string;
-    asString: string;
+    asFloat: number;
+    asShort: number;
+    asCharacter: string;
+    asNumber: number;
+    asJsonArray: JsonArray;
+    asJsonPrimitive: JsonPrimitive;
+    jsonArray: boolean;
+    asJsonNull: JsonNull;
+    jsonPrimitive: boolean;
+    asBigDecimal: number;
+    jsonObject: boolean;
+    asJsonObject: JsonObject;
+    asBigInteger: number;
 };
 
 export type JsonPrimitive = {
+    asString: string;
     asDouble: number;
     asInt: number;
     asLong: number;
     asBoolean: boolean;
-    asNumber: number;
-    asCharacter: string;
-    asBigDecimal: number;
-    asBigInteger: number;
+    asByte: string;
+    asFloat: number;
     asShort: number;
     number: boolean;
     string: boolean;
-    asFloat: number;
     boolean: boolean;
-    asByte: string;
-    asString: string;
+    asCharacter: string;
+    asNumber: number;
+    asBigDecimal: number;
+    asBigInteger: number;
+    jsonNull: boolean;
     asJsonArray: JsonArray;
+    asJsonPrimitive: JsonPrimitive;
+    jsonArray: boolean;
     asJsonNull: JsonNull;
     jsonPrimitive: boolean;
-    asJsonPrimitive: JsonPrimitive;
-    asJsonObject: JsonObject;
-    jsonArray: boolean;
     jsonObject: boolean;
-    jsonNull: boolean;
+    asJsonObject: JsonObject;
 };
 
 export type StringList = Array<string>;
@@ -1849,7 +1854,7 @@ export type GetTemplatesResponses = {
     /**
      * OK
      */
-    200: Array<Template>;
+    200: Array<RuleTemplate>;
 };
 
 export type GetTemplatesResponse = GetTemplatesResponses[keyof GetTemplatesResponses];
@@ -1883,7 +1888,7 @@ export type GetTemplateByIdResponses = {
     /**
      * OK
      */
-    200: Template;
+    200: RuleTemplate;
 };
 
 export type GetTemplateByIdResponse = GetTemplateByIdResponses[keyof GetTemplateByIdResponses];
