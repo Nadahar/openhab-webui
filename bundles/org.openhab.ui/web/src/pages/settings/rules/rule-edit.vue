@@ -675,7 +675,7 @@ export default {
               loadingFinished()
             })
           })
-        } else if (this.stubMode) { // TODO: (Nad) Figure out show code
+        } else if (this.stubMode) {
           if (!this.ruleCopy || !this.ruleCopy.templateUID) {
             showToast(
               !this.ruleCopy
