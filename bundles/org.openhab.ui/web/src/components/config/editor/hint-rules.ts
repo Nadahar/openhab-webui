@@ -7,7 +7,7 @@ import type { EditorView } from '@codemirror/view'
 import * as api from '@/api'
 
 let moduleTypesCache: { [section: string]: api.ModuleType[] | null } = {}
-let templatesCache: api.RuleTemplate[] = []
+let templatesCache: api.RuleTemplateDto[] = []
 
 async function getModuleTypes(section: string) {
   if (moduleTypesCache[section]) return moduleTypesCache[section]
@@ -49,7 +49,23 @@ function findModuleType(context: CompletionContext, arrayElementLine: Line) {
   return null
 }
 
-function getTemplate(context: CompletionContext, grandParentLine: Line): String | null {
+function getChildLines(context: CompletionContext, line: Line, ignoreHyphen = false): Line[] {
+  const childIndent = lineIndent(line, ignoreHyphen) + 2
+  let childLine
+  let indent
+  let result: Line[] = []
+  for (let l = line.number + 1; l <= context.state.doc.lines; l++) {
+    childLine = context.state.doc.line(l)
+    indent = lineIndent(childLine, ignoreHyphen)
+    if (indent < childIndent) break
+    if (indent > childIndent) continue
+    if (!childLine.text.trim()) continue
+    result.push(childLine)
+  }
+  return result
+}
+
+function getTemplateUid(context: CompletionContext, grandParentLine: Line): String | null {
   if (!grandParentLine) return null
 
   const rulePropsIndent = lineIndent(grandParentLine, true) + 2
@@ -81,7 +97,7 @@ function applyAliasToMimeType(section: string, completionResult: CompletionResul
   return completionResult
 }
 
-async function hintTemplateConfig(context: CompletionContext, templateUid: String, line: Line): Promise<CompletionResult | null> {
+async function hintTemplateConfig(context: CompletionContext, templateUid: String, line: Line, parentLine: Line): Promise<CompletionResult | null> {
   const templates = await getTemplates()
   const template = templates.find((t) => t.uid === templateUid)
   if (!template) {
@@ -98,20 +114,66 @@ async function hintTemplateConfig(context: CompletionContext, templateUid: Strin
       if (result) {
         return result
       }
-      const parameterName = line.text.substring(0, colonPos).trim()
-      // if (result && parameterName === 'type') {
-      //   if (result instanceof Promise) {
-      //     result.then((r) => {
-      //       applyAliasToMimeType(section, r)
-      //     })
-      //   } else {
-      //     applyAliasToMimeType(section, result)
-      //   }
-      // }
-      return result
 
+      const parameterName = line.text.substring(0, colonPos).trim()
+      const parameter = parameters.find((p) => p.name === parameterName)
+      if (parameter?.default) {
+        const defaultStr = parameter.default || ''
+
+        const apply = (view: EditorView, completion: Completion, _from: number, _to: number) => {
+          const from = line.from + colonPos + 2
+          const to = view.state.doc.lineAt(context.pos).to
+          view.dispatch(insertCompletionText(view.state, defaultStr, from, to))
+        }
+        return {
+          from: completionStart(context),
+          validFor: /\w+/,
+          options: [
+            { label: 'Default: ' + defaultStr, info: parameter.description ? parameter.description : parameter.label, apply }
+          ]
+        }
+      }
+      return result
+  } else {
+    let existing = []
+    for (const sibling of getChildLines(context, parentLine, false)) {
+      const colonPos = sibling.text.indexOf(':')
+      if (colonPos > 0) {
+        const siblingName = sibling.text.substring(0, colonPos).trim();
+        if (siblingName) {
+          existing.push(siblingName)
+        }
+      }
+    }
+    const result = hintParameters(context, parameters, lineIndent(line, true))
+    result.options = result.options.filter((c) => existing.indexOf(c.label) < 0)
+    return result
   }
-  return null
+}
+
+async function hintTemplate(context: CompletionContext, line: Line, colonPos: number): Promise<CompletionResult | null> {
+  const templates = await getTemplates()
+  if (!templates?.length) return null
+
+  const apply = (view: EditorView, completion: Completion, _from: number, _to: number) => {
+    const from = line.from + colonPos + 2
+    const to = view.state.doc.lineAt(context.pos).to
+    const insert = completion.label
+    view.dispatch(insertCompletionText(view.state, insert, from, to))
+  }
+
+  return {
+    from: completionStart(context),
+    validFor: /.*\S/,
+    options: templates.map((t) => {
+        return {
+          label: t.uid,
+          detail: t.label,
+          info: t.description,
+          apply
+        }
+      })
+  } satisfies CompletionResult
 }
 
 function hintModuleConfig(context: CompletionContext, line: Line, parentLine: Line, grandParentLine: Line): CompletionResult | Promise<CompletionResult | null> | null {
@@ -483,7 +545,12 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
     parentLine.from !== findParent(context, line, false)?.from
 
   if (parentIndent === 2) {
-    if (!afterColon) {
+    if (afterColon) {
+      const element = line.text.substring(0, colonPos).trim()
+      if (element.match(/^template(?:uid)?$/i)) {
+        return hintTemplate(context, line, colonPos)
+      }
+    } else {
       return hintRuleStructure(context, line)
     }
   } else {
@@ -499,9 +566,9 @@ export default function hint(context: CompletionContext): CompletionResult | Pro
         return hintModuleStructure(context, line, parentLine)
       } else if (isConfig(parentLine)) {
         // Rule configuration
-        const templateUid = getTemplate(context, grandParentLine)
+        const templateUid = getTemplateUid(context, grandParentLine)
         if (templateUid) {
-          return hintTemplateConfig(context, templateUid, line)
+          return hintTemplateConfig(context, templateUid, line, parentLine)
         }
       }
     } else if (grandParentLine) {
