@@ -909,7 +909,7 @@ export default {
           return useSemanticsStore().loadSemantics(i18n)
         })
         .catch((err) => {
-          if (err === 'Unauthorized' || err === 401) {
+          if (err.response?.status === 401 || err === 'Unauthorized' || err === 401) {
             console.info('openHAB REST API implicit user role is disabled. Authorizing ...')
             this.authorize(false) // will redirect to auth page, redirecting back to Main UI triggers new load
           } else {
