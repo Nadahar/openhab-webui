@@ -120,7 +120,8 @@ export async function setAccessToken(token: string, api: { get: (path: string) =
         requireToken = false
       })
       .catch((err: unknown) => {
-        if (err instanceof ApiError && (err.response.statusText === 'Unauthorized' || err.response.status === 401)) {
+        const status = err instanceof ApiError ? err.response?.status || err.response?.statusText : err
+        if (status === 'Unauthorized' || status === 401) {
           requireToken = true
         }
         accessToken = token
